@@ -12,7 +12,8 @@ A personal project to track and celebrate daily achievements. This tracker helps
 |------|------|--------|-------|
 | 2025-01-08 | Complete project setup | :white_check_mark: | Repository initialized |
 | 2025-01-08 | Create README structure | :white_check_mark: | Basic structure implemented |
-| 2025-01-09 | Add core structure | :construction: | In progress |
+| 2025-01-10 | Add core structure | :construction: | In progress |
+| 2025-01-10 | Landing page | :construction: | In progress |
 
 ### Status Key
 - :white_check_mark: = Completed
