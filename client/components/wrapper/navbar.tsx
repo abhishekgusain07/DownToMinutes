@@ -21,7 +21,7 @@ const components: { title: string; href: string; description: string }[] = [
     },
 ];
 
-export default function NavBar() {
+export default function NavBar2() {
     let userId = null;
     /* eslint-disable react-hooks/rules-of-hooks */
     if (config?.auth?.enabled) {
