@@ -15,7 +15,7 @@ const HowItWorks = () =>  {
                     <h3 className="text-xl font-bold text-white mb-4">Log Your Activities</h3>
                     <div className="h-32 w-32 mx-auto bg-neutral-700 rounded-full flex items-center justify-center mb-6">
                     <svg className="w-16 h-16 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     </div>
                     <p className="text-gray-400">Simply input your daily activities with duration. Track everything from work to leisure.</p>
@@ -29,7 +29,7 @@ const HowItWorks = () =>  {
                     <h3 className="text-xl font-bold text-white mb-4">Set Your Goals</h3>
                     <div className="h-32 w-32 mx-auto bg-neutral-700 rounded-full flex items-center justify-center mb-6">
                     <svg className="w-16 h-16 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                     </svg>
                     </div>
                     <p className="text-gray-400">Define your daily, weekly, and quarterly goals with specific time allocations.</p>
@@ -43,7 +43,7 @@ const HowItWorks = () =>  {
                     <h3 className="text-xl font-bold text-white mb-4">Get AI Insights</h3>
                     <div className="h-32 w-32 mx-auto bg-neutral-700 rounded-full flex items-center justify-center mb-6">
                     <svg className="w-16 h-16 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                     </svg>
                     </div>
                     <p className="text-gray-400">Receive personalized AI analysis and recommendations to optimize your time usage.</p>

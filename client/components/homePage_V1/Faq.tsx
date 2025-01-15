@@ -34,7 +34,7 @@ const Faq = () => {
                         <button className="faq-toggle w-full flex justify-between items-center p-4 focus:outline-none" onClick={handleToggle}>
                             <span className="text-lg font-semibold text-gray-900">How does the AI-powered insight system work?</span>
                             <svg className="faq-icon w-6 h-6 text-gray-500 transform transition-transform duration-200" style={{transform: rotateIcon ? 'rotate(180deg)' : 'rotate(0deg)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
                         <div className={`faq-content p-4 pt-0 text-gray-600 ${isActive ? '' : 'hidden'}`}>
@@ -46,7 +46,7 @@ const Faq = () => {
                         <button className="faq-toggle w-full flex justify-between items-center p-4 focus:outline-none" onClick={handleToggle}>
                             <span className="text-lg font-semibold text-gray-900">Can I track multiple projects simultaneously?</span>
                             <svg className="faq-icon w-6 h-6 text-gray-500 transform transition-transform duration-200" style={{transform: rotateIcon ? 'rotate(180deg)' : 'rotate(0deg)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
                         <div className={`faq-content hidden p-4 pt-0 text-gray-600 ${isActive ? '' : 'hidden'}`}>
@@ -58,7 +58,7 @@ const Faq = () => {
                         <button className="faq-toggle w-full flex justify-between items-center p-4 focus:outline-none" onClick={handleToggle}>
                             <span className="text-lg font-semibold text-gray-900">How accurate are the AI predictions?</span>
                             <svg className="faq-icon w-6 h-6 text-gray-500 transform transition-transform duration-200" style={{transform: rotateIcon ? 'rotate(180deg)' : 'rotate(0deg)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
                         <div className={`faq-content hidden p-4 pt-0 text-gray-600 ${isActive ? '' : 'hidden'}`}>
@@ -70,7 +70,7 @@ const Faq = () => {
                         <button className="faq-toggle w-full flex justify-between items-center p-4 focus:outline-none" onClick={handleToggle}>
                             <span className="text-lg font-semibold text-gray-900">Can I export my time tracking data?</span>
                             <svg className="faq-icon w-6 h-6 text-gray-500 transform transition-transform duration-200" style={{transform: rotateIcon ? 'rotate(180deg)' : 'rotate(0deg)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
                         <div className={`faq-content hidden p-4 pt-0 text-gray-600 ${isActive ? '' : 'hidden'}`}>
@@ -82,7 +82,7 @@ const Faq = () => {
                         <button className="faq-toggle w-full flex justify-between items-center p-4 focus:outline-none" onClick={handleToggle}>
                             <span className="text-lg font-semibold text-gray-900">Is my data secure and private?</span>
                             <svg className="faq-icon w-6 h-6 text-gray-500 transform transition-transform duration-200" style={{transform: rotateIcon ? 'rotate(180deg)' : 'rotate(0deg)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
                         <div className={`faq-content hidden p-4 pt-0 text-gray-600 ${isActive ? '' : 'hidden'}`}>

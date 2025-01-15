@@ -5,7 +5,7 @@ import HowItWorks from "../components/homePage_V1/HowItWorks";
 import Insights from "../components/homePage_V1/Insights";
 import GoalTracking from "../components/homePage_V1/GoalTracking";
 import Testimonials from "../components/homePage_V1/Testimonials";
-import Pricing from "../components/homePage_V1/Pricing";
+// import Pricing from "../components/homePage_V1/Pricing";
 import Faq from "../components/homePage_V1/Faq";
 import Contact from "../components/homePage_V1/Contact";
 
@@ -14,6 +14,7 @@ import MarketingCards from "@/components/homepage/marketing-cards";
 import SideBySide from "@/components/homepage/side-by-side";
 import PageWrapper from "@/components/wrapper/page-wrapper";
 import config from "@/config";
+import Pricing from "@/components/homepage/pricing";
 
 export default function Home() {
   return (
@@ -24,9 +25,10 @@ export default function Home() {
         <Insights />
         <GoalTracking />
         <Testimonials />
-        <Pricing />
+        {/* <Pricing /> */}
         <Faq />
         <Contact />
+        <Pricing />
     </PageWrapper>
   );
 }

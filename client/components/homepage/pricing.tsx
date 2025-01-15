@@ -199,7 +199,7 @@ export default function Pricing() {
   ]
 
   return (
-    <div>
+    <div className="py-6" id="pricing">
       <PricingHeader title="Sample Pricing Plans" subtitle="Use these sample pricing cards in your SAAS" />
       <PricingSwitch onSwitch={togglePricingPeriod} />
       <section className="flex flex-col sm:flex-row sm:flex-wrap justify-center gap-8 mt-8">

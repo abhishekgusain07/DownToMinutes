@@ -24,7 +24,7 @@ const Navbar = () => {
                 <button type="button" className="hamburger inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-neutral-800 focus:outline-none" aria-controls="mobile-menu" aria-expanded="false" id="el-5bgh85da">
                     <span className="sr-only" id="el-g5tk3s7e">Open main menu</span>
                     <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" id="el-3k5urska">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" id="el-cobydjv2"></path>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" id="el-cobydjv2"></path>
                     </svg>
                 </button>
                 </div>
