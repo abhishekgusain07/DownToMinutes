@@ -8,26 +8,9 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://starter.rasmic.xyz"),
-  title: {
-    default: 'Nextjs Starter Kit',
-    template: `%s | Nextjs Starter Kit`
-  },
-  description: 'The Ultimate Nextjs 14 Starter Kit for quickly building your SaaS, giving you time to focus on what really matters',
-  openGraph: {
-    description: 'The Ultimate Nextjs 14 Starter Kit for quickly building your SaaS, giving you time to focus on what really matters',
-    images: ['https://utfs.io/f/8a428f85-ae83-4ca7-9237-6f8b65411293-eun6ii.png'],
-    url: 'https://starter.rasmic.xyz/'
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Nextjs Starter Kit',
-    description: 'The Ultimate Nextjs 14 Starter Kit for quickly building your SaaS, giving you time to focus on what really matters',
-    siteId: "",
-    creator: "@rasmic",
-    creatorId: "",
-    images: ['https://utfs.io/f/8a428f85-ae83-4ca7-9237-6f8b65411293-eun6ii.png'],
-  },
+  metadataBase: new URL("https://abhishekgusain.vercel.app"),
+  title: "DownToMinute: Take actions toward your goals .",
+  description: 'DownToMinute helps you set, track, and achieve your goals efficiently, empowering personal growth and productivity, one actionable step at a time.',
 }
 
 export default function RootLayout({

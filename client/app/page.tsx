@@ -26,9 +26,10 @@ export default function Home() {
         <GoalTracking />
         <Testimonials />
         {/* <Pricing /> */}
+        {/* TODO: styling to match rest of the theme */}
+        <Pricing />
         <Faq />
         <Contact />
-        <Pricing />
     </PageWrapper>
   );
 }
