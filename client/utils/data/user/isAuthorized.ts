@@ -3,17 +3,18 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
-import config from "@/tailwind.config";
+import config from "@/config";
 
 export const isAuthorized = async (
   userId: string
 ): Promise<{ authorized: boolean; message: string }> => {
-  // if (!config?.payments?.enabled) {
-  //   return {
-  //     authorized: true,
-  //     message: "Payments are disabled",
-  //   };
-  // }
+ 
+  if (!config?.payments?.enabled) {
+    return {
+      authorized: true,
+      message: "Payments are disabled",
+    };
+  }
 
   const result = (await clerkClient()).users.getUser(userId);
 
