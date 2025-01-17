@@ -8,6 +8,12 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
 model user {
   id                Int      @id @default(autoincrement())
   created_time      DateTime @default(now())
@@ -18,6 +24,7 @@ model user {
   profile_image_url String?
   user_id           String   @unique
   subscription      String?
+  goals             goal[]
 }
 
 model payments {
@@ -70,4 +77,19 @@ model invoices {
   status          String
   email           String
   user_id         String?
+}
+
+model goal {
+  id              Int       @id @default(autoincrement())
+  title           String
+  description     String?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  priority        Priority  @default(MEDIUM)
+  active          Boolean   @default(true)
+  start_date      DateTime
+  end_date        DateTime
+  completed       Boolean   @default(false)
+  user            user      @relation(fields: [user_id], references: [id])
+  user_id         Int
 }

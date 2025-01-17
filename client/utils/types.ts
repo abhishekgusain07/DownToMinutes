@@ -45,3 +45,25 @@ const userUpdateSchema = z.object({
     .describe("user profile image URL"),
   user_id: z.string().describe("user ID"),
 });
+
+export enum Priority { 
+  LOW,
+  MEDIUM,
+  HIGH
+}
+
+
+export interface Goal {
+  id: number;
+  title: string;
+  description?: string;
+  created_at: Date;
+  updated_at: Date;
+  priority: Priority
+  active: boolean;
+  start_date: Date;
+  end_date: Date;
+  completed: boolean;
+  user_id: number;
+}
+
