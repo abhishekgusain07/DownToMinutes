@@ -21,18 +21,44 @@ enum Frequency {
   YEARLY
 }
 
+enum ActivityCategory {
+  WORK
+  STUDY
+  EXERCISE
+  MEAL
+  REST
+  LEISURE
+  MEETING
+  COMMUTE
+  SOCIAL
+  SELF_CARE
+  CHORES
+  OTHER
+}
+
+enum Mood {
+  VERY_PRODUCTIVE
+  PRODUCTIVE
+  NEUTRAL
+  UNPRODUCTIVE
+  VERY_UNPRODUCTIVE
+}
+
 model user {
-  id                Int      @id @default(autoincrement())
-  created_time      DateTime @default(now())
-  email             String   @unique
+  id                Int       @id @default(autoincrement())
+  created_time      DateTime  @default(now())
+  email             String    @unique
   first_name        String?
   last_name         String?
   gender            String?
   profile_image_url String?
-  user_id           String   @unique
+  user_id           String    @unique
   subscription      String?
   goals             goal[]
   subgoals         subgoal[]
+  days             day[]
+  activities       activity[]
+  tags             tag[]
 }
 
 model payments {
@@ -88,23 +114,23 @@ model invoices {
 }
 
 model goal {
-  id              String       @id 
-  title           String
-  description     String?
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
-  priority        Priority  @default(MEDIUM)
-  active          Boolean   @default(true)
-  start_date      DateTime
-  end_date        DateTime
-  completed       Boolean   @default(false)
-  user            user      @relation(fields: [user_id], references: [id])
-  user_id         Int
-  subgoals        subgoal[]
+  id          String    @id 
+  title       String
+  description String?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  priority    Priority  @default(MEDIUM)
+  active      Boolean   @default(true)
+  start_date  DateTime
+  end_date    DateTime
+  completed   Boolean   @default(false)
+  user        user      @relation(fields: [user_id], references: [id])
+  user_id     Int
+  subgoals    subgoal[]
 }
 
 model subgoal {
-  id          String       @id 
+  id          String    @id 
   title       String
   description String?
   frequency   Frequency
@@ -117,4 +143,65 @@ model subgoal {
   goal_id     String
   user        user      @relation(fields: [user_id], references: [id])
   user_id     Int
+}
+
+model tag {
+  id          String     @id
+  name        String
+  color       String?    // Hex color code
+  created_at  DateTime   @default(now())
+  user        user       @relation(fields: [user_id], references: [id])
+  user_id     Int
+  activities  activity[]
+
+  @@unique([name, user_id])
+}
+
+model activity {
+  id          String           @id
+  title       String
+  description String?
+  category    ActivityCategory @default(OTHER)
+  duration    Int             
+  created_at  DateTime         @default(now())
+  updated_at  DateTime         @updatedAt
+  user        user             @relation(fields: [user_id], references: [id])
+  user_id     Int
+  tags        tag[]
+  entries     entry[]
+}
+
+model day {
+  id              String    @id
+  date            DateTime  @unique
+  mood            Mood?     
+  summary         String?   
+  energy_level    Int?      
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  user            user      @relation(fields: [user_id], references: [id])
+  user_id         Int
+  entries         entry[]
+  total_focus_time Int?     
+  distractions    String[]  
+  highlights      String[]  
+}
+
+model entry {
+  id             String           @id
+  start_time     DateTime
+  end_time       DateTime
+  title          String
+  description    String?
+  category       ActivityCategory @default(OTHER)
+  focus_score    Int?            
+  energy_level   Int?            
+  interruptions  Int?            
+  location       String?         
+  created_at     DateTime        @default(now())
+  updated_at     DateTime        @updatedAt
+  day            day             @relation(fields: [day_id], references: [id])
+  day_id         String
+  activity       activity?       @relation(fields: [activity_id], references: [id])
+  activity_id    String?
 }
