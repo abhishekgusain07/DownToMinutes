@@ -3,17 +3,20 @@
 import { auth } from "@clerk/nextjs/server"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
+import { getUser } from "../user/getUser"
+import { getGoal } from "../goals/getGoal"
+import { Frequency } from "@/utils/types"
 import { uid } from "uid"
 
-type CreateGoalInput = {
+type CreateSubgoalInput = {
     title: string
     description?: string
-    priority: "LOW" | "MEDIUM" | "HIGH"
-    start_date: Date
-    end_date: Date
+    frequency: Frequency
+    due_date: Date
+    goal_id: string
 }
 
-export const createGoal = async (goalData: CreateGoalInput) => {
+export const createSubgoal = async (subgoalData: CreateSubgoalInput) => {
     const cookieStore = await cookies();
     const { userId } = await auth();
     
@@ -35,33 +38,35 @@ export const createGoal = async (goalData: CreateGoalInput) => {
 
     try {
         // First, get the user's database ID using their Clerk ID
-        const { data: userData, error: userError } = await supabase
-            .from("user")
-            .select("id")
-            .eq("user_id", userId)
-            .single();
-
-        if (userError || !userData) {
-            console.error("Error fetching user:", userError);
+        const userData = await getUser(userId);
+        if (!userData) {
             throw new Error("User not found");
+        }
+
+        // Verify the goal exists and belongs to the user
+        const goalData = await getGoal(subgoalData.goal_id);
+        if (!goalData) {
+            throw new Error("Goal not found");
+        }
+        if (goalData.user_id !== userData.id) {
+            throw new Error("Not authorized to create subgoals for this goal");
         }
 
         const now = new Date();
         
-        // Now create the goal with the correct user_id
         const { data, error } = await supabase
-            .from("goal")
+            .from("subgoal")
             .insert([
                 {
                     id: uid(32),
-                    title: goalData.title,
-                    description: goalData.description,
-                    priority: goalData.priority,
-                    start_date: goalData.start_date,
-                    end_date: goalData.end_date,
+                    title: subgoalData.title,
+                    description: subgoalData.description,
+                    frequency: subgoalData.frequency,
+                    due_date: subgoalData.due_date,
+                    goal_id: subgoalData.goal_id,
                     user_id: userData.id,
-                    active: true,
                     completed: false,
+                    active: true,
                     created_at: now,
                     updated_at: now
                 },
@@ -69,13 +74,13 @@ export const createGoal = async (goalData: CreateGoalInput) => {
             .select();
 
         if (error) {
-            console.error("Error creating goal:", error);
-            throw new Error("Error creating goal");
+            console.error("Error creating subgoal:", error);
+            throw new Error("Error creating subgoal");
         }
 
         return data;
     } catch (error) {
-        console.error("Error in createGoal:", error);
+        console.error("Error in createSubgoal:", error);
         throw error;
     }
 }

@@ -52,6 +52,12 @@ export enum Priority {
   HIGH
 }
 
+export enum Frequency {
+  WEEKLY = "WEEKLY",
+  MONTHLY = "MONTHLY",
+  QUARTERLY = "QUARTERLY",
+  YEARLY = "YEARLY"
+}
 
 export interface Goal {
   id: number;
@@ -65,8 +71,21 @@ export interface Goal {
   end_date: Date;
   completed: boolean;
   user_id: number;
+  subgoals?: Subgoal[];
 }
 
+export interface Subgoal {
+  id: number;
+  title: string;
+  description?: string;
+  frequency: Frequency;
+  due_date: Date;
+  completed: boolean;
+  created_at: Date;
+  updated_at: Date;
+  goal_id: number;
+  user_id: number;
+}
 
 export type User = {
   id: number

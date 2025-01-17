@@ -8,12 +8,19 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-
 enum Priority {
   LOW
   MEDIUM
   HIGH
 }
+
+enum Frequency {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
 model user {
   id                Int      @id @default(autoincrement())
   created_time      DateTime @default(now())
@@ -25,6 +32,7 @@ model user {
   user_id           String   @unique
   subscription      String?
   goals             goal[]
+  subgoals         subgoal[]
 }
 
 model payments {
@@ -80,7 +88,7 @@ model invoices {
 }
 
 model goal {
-  id              Int       @id @default(autoincrement())
+  id              String       @id 
   title           String
   description     String?
   created_at      DateTime  @default(now())
@@ -92,4 +100,21 @@ model goal {
   completed       Boolean   @default(false)
   user            user      @relation(fields: [user_id], references: [id])
   user_id         Int
+  subgoals        subgoal[]
+}
+
+model subgoal {
+  id          String       @id 
+  title       String
+  description String?
+  frequency   Frequency
+  active      Boolean   @default(true)
+  due_date    DateTime
+  completed   Boolean   @default(false)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  goal        goal      @relation(fields: [goal_id], references: [id])
+  goal_id     String
+  user        user      @relation(fields: [user_id], references: [id])
+  user_id     Int
 }

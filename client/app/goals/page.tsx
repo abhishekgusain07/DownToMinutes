@@ -21,7 +21,9 @@ const Goals = async() => {
                 ) : (
                     goals.map((goal) => (
                         <div key={goal.id}>
-                            {goal.title}
+                            <Link href={`/goals/${goal.id}`}>
+                                {goal.title}
+                            </Link>
                         </div>
                     ))
                 )
