@@ -67,3 +67,15 @@ export interface Goal {
   user_id: number;
 }
 
+
+export type User = {
+  id: number
+  created_time: Date
+  email: string
+  first_name: string | null
+  last_name: string | null
+  gender: string | null
+  profile_image_url: string | null
+  user_id: string
+  subscription: string | null
+}

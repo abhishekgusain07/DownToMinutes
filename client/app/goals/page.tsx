@@ -1,6 +1,9 @@
+import { Button } from "@/components/ui/button";
 import { fetchUserGoals } from "@/utils/data/user/fetchUserGoals";
 import { Goal, Priority } from "@/utils/types";
+import { SignOutButton } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
+import Link from "next/link";
 
 const Goals = async() => {
     const user = await currentUser()
@@ -17,12 +20,18 @@ const Goals = async() => {
                     <h1>No goals currently</h1>
                 ) : (
                     goals.map((goal) => (
-                        <div>
-                            something
+                        <div key={goal.id}>
+                            {goal.title}
                         </div>
                     ))
                 )
             }
+            <Button variant="ghost" asChild>
+                <Link href="/goals/new">
+                    add goal
+                </Link>
+            </Button>
+            
         </div>
     )
 }
