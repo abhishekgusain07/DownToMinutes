@@ -49,16 +49,39 @@ export const createDayEntry = async (entryData: CreateEntryInput) => {
     }
 
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const today = new Date();
+    
+    // Format function to match Supabase datetime format
+    function formatDateTime(date: Date) {
+        return date.getFullYear() + '-' +
+            String(date.getMonth() + 1).padStart(2, '0') + '-' +
+            String(date.getDate()).padStart(2, '0') + ' ' +
+            String(date.getHours()).padStart(2, '0') + ':' +
+            String(date.getMinutes()).padStart(2, '0') + ':' +
+            String(date.getSeconds()).padStart(2, '0') + '.' +
+            String(date.getMilliseconds()).slice(0, 1);
+    }
+
+    // Set to today 12:01 AM
+    const today_12_01_AM = new Date(today);
+    today_12_01_AM.setHours(0, 1, 0, 0);
+
+    // Set to today 11:59 PM
+    const today_11_59_PM = new Date(today);
+    today_11_59_PM.setHours(23, 59, 59, 999);
+
+    const startTime = formatDateTime(today_12_01_AM);
+    const endTime = formatDateTime(today_11_59_PM);
 
     // First, try to find an existing day record for today
     const { data: existingDay } = await supabase
         .from("day")
         .select("id")
         .eq("user_id", userData.id)
-        .gte("date", today.toISOString())
-        .lt("date",new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString())
-        .single();
+        .gte("date", startTime)
+        .lt("date", endTime)
+        .single();  
 
     let dayId;
 

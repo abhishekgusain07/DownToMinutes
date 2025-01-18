@@ -98,3 +98,44 @@ export type User = {
   user_id: string
   subscription: string | null
 }
+
+export interface DayEntry {
+  id: string;
+  date: string;
+  mood?: string;
+  summary?: string;
+  energy_level?: number;
+  created_at: string;
+  updated_at: string;
+  total_focus_time?: number;
+  distractions: string[];
+  highlights: string[];
+  entries: Entry[];
+}
+
+export enum ActivityCategory {
+  WORK = "WORK",
+  STUDY = "STUDY",
+  EXERCISE = "EXERCISE",
+  LEISURE = "LEISURE",
+  SOCIAL = "SOCIAL",
+  SELF_CARE = "SELF_CARE",
+  OTHER = "OTHER"
+}
+
+export interface Entry {
+  id: string;
+  start_time: string;
+  end_time: string;
+  title: string;
+  description?: string;
+  category: ActivityCategory;
+  focus_score?: number;
+  energy_level?: number;
+  interruptions?: number;
+  location?: string;
+  created_at: string;
+  updated_at: string;
+  day_id: string;
+  activity_id?: string;
+}

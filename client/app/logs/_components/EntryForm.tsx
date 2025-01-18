@@ -4,6 +4,7 @@ import { ActivityCategory } from "@prisma/client";
 import { createDayEntry } from "@/utils/data/logs/createDayEntry";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 type FormData = {
     title: string;
@@ -35,10 +36,13 @@ export const EntryForm = () => {
                 start_time: new Date(data.start_time),
                 end_time: new Date(data.end_time),
             });
+            toast.success("Entry created successfully")
+            router.push(`/logs`)
+            router.refresh()
             reset();
-            router.refresh();
         } catch (error) {
             console.error("Failed to create entry:", error);
+            toast.error("Failed to create entry")
         } finally {
             setIsLoading(false);
         }
