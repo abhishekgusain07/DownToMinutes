@@ -139,3 +139,12 @@ export interface Entry {
   day_id: string;
   activity_id?: string;
 }
+
+export interface FilteredUsers {
+  id: number;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  profile_image_url: string | null;
+  user_id: string;
+}
