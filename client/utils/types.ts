@@ -95,12 +95,21 @@ export enum FriendshipStatus {
 
 export type FriendRequest = {
   id: string
-  created_at: Date
+  created_at : Date
   status: FriendshipStatus
   sender_id: number
   receiver_id: number
   sender: User
   receiver: User
+}
+
+export interface FriendRequestWithUser {
+  id: string
+  created_at: Date
+  sender_id: number
+  receiver_id: number
+  senderData: User | null
+  receiverData ?: User | null
 }
 
 export type Friendship = {
