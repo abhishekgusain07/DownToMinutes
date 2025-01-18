@@ -15,7 +15,11 @@ A personal project to track and celebrate daily achievements. This tracker helps
 | 2025-01-10 | core structure setup | :white_check_mark: | stripe+supabase+redis+clerk |
 | 2025-01-10 | Landing page | :white_check_mark: | Landing page implemented |
 | 2025-01-17 | Database setup  | :white_check_mark: | Implemented |
-| 2025-01-18 | server actions | :hourglass: | In progress |
+| 2025-01-18 | AI Integration | :white_check_mark: | Implemented |
+| 2025-01-18 | server actions | :white_check_mark: | Implemented |
+| 2025-01-18 | journal | :hourglass: | In progress |
+
+
 ### Status Key
 - :white_check_mark: = Completed
 - :construction: = In Progress
@@ -27,10 +31,10 @@ Fancy version of todo App
 
 ## Statistics
 
-- Total Goals: 4
-- Completed: 2
+- Total Goals: 8
+- Completed: 7
 - In Progress: 1
-- Pending: 1
+- Pending: 0
 
 ## License
 MIT
