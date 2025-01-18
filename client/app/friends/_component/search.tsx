@@ -20,7 +20,10 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, MessageSquareMore, Search, UserPlus, Users2 } from "lucide-react";
 import Skeleton from "@/components/skeleton";
 import { searchAllUserExceptCurrent } from "@/utils/data/user/searchAllUserExceptCurrent";
-import { FilteredUsers } from "@/utils/types";
+import { FilteredUsers, FriendRequest } from "@/utils/types";
+import { toast } from "sonner";
+import sendFriendRequest from "@/utils/data/friend/sendFriendRequest";
+import { checkExistingFriendship } from "@/utils/data/friend/checkExistingFriendship";
 
 const SearchFriends = () => {
     const {userId} = useAuth()
@@ -49,6 +52,19 @@ const SearchFriends = () => {
 
     }, [debouncedSearchTerm])
 
+    const sendFriendRequestToUser = async(friendClerkId: string) => {
+        try{
+            // const alreadyFriends: boolean =  await checkExistingFriendship({senderId: userId, recipientId: friendClerkId});
+            // if(alreadyFriends) {
+            //     toast.error("You are already friends with this user")
+            //     return;
+            // }
+             await sendFriendRequest({senderId: userId!, receiverId: friendClerkId});
+            toast.success("Friend request sent ✅")
+        } catch (error: any) {
+            toast.error("Error while sending friend request ❌")
+        }
+    }
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setSearchTerm(value);
@@ -116,7 +132,12 @@ const SearchFriends = () => {
                                         {user.first_name} {user.last_name}
                                     </h3>
                                 </div>
-                                <Button variant="ghost" size="icon" className="text-[#AEBAC1] hover:text-white">
+                                <Button variant="ghost" size="icon" className="text-[#AEBAC1] hover:text-white"
+                                onClick={() => {
+                                    sendFriendRequestToUser(user.user_id);
+                                    setIsOpen(false);
+                                }}
+                                >
                                     <UserPlus className="w-5 h-5" />
                                 </Button>
                             </div>

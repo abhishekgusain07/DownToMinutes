@@ -87,6 +87,56 @@ export interface Subgoal {
   user_id: number;
 }
 
+export enum FriendshipStatus {
+  PENDING = "PENDING",
+  ACCEPTED = "ACCEPTED",
+  REJECTED = "REJECTED"
+}
+
+export type FriendRequest = {
+  id: string
+  created_at: Date
+  status: FriendshipStatus
+  sender_id: number
+  receiver_id: number
+  sender: User
+  receiver: User
+}
+
+export type Friendship = {
+  id: string
+  created_at: Date
+  user1_id: number
+  user2_id: number
+  user1: User
+  user2: User
+  accountability_settings?: AccountabilitySettings
+}
+
+export type AccountabilitySettings = {
+  id: string
+  created_at: Date
+  updated_at: Date
+  friendship_id: string
+  friendship: Friendship
+  share_enabled: boolean
+  frequency: "DAILY" | "WEEKLY"
+  reminder_time?: Date
+}
+
+export type AccountabilityReport = {
+  id: string
+  created_at: Date
+  report_date: Date
+  sender_id: number
+  receiver_id: number
+  sender: User
+  receiver: User
+  activities_completed: number
+  goals_progressed: number
+  main_achievements: string
+}
+
 export type User = {
   id: number
   created_time: Date
@@ -97,6 +147,17 @@ export type User = {
   profile_image_url: string | null
   user_id: string
   subscription: string | null
+  goals?: Goal[]
+  subgoals?: Subgoal[]
+  days?: Day[]
+  activities?: Activity[]
+  tags?: Tag[]
+  sent_friend_requests?: FriendRequest[]
+  received_friend_requests?: FriendRequest[]
+  friendships_as_user1?: Friendship[]
+  friendships_as_user2?: Friendship[]
+  sent_reports?: AccountabilityReport[]
+  received_reports?: AccountabilityReport[]
 }
 
 export interface DayEntry {
@@ -147,4 +208,49 @@ export interface FilteredUsers {
   last_name: string | null;
   profile_image_url: string | null;
   user_id: string;
+}
+
+export enum Mood {
+  VERY_PRODUCTIVE = "VERY_PRODUCTIVE",
+  PRODUCTIVE = "PRODUCTIVE",
+  NEUTRAL = "NEUTRAL",
+  UNPRODUCTIVE = "UNPRODUCTIVE",
+  VERY_UNPRODUCTIVE = "VERY_UNPRODUCTIVE"
+}
+
+export type Day = {
+  id: string
+  date: Date
+  mood?: Mood
+  summary?: string
+  energy_level?: number
+  created_at: Date
+  updated_at: Date
+  user_id: number
+  entries: Entry[]
+  total_focus_time?: number
+  distractions: string[]
+  highlights: string[]
+}
+
+export type Activity = {
+  id: string
+  title: string
+  description?: string
+  category: ActivityCategory
+  duration: number
+  created_at: Date
+  updated_at: Date
+  user_id: number
+  tags: Tag[]
+  entries: Entry[]
+}
+
+export type Tag = {
+  id: string
+  name: string
+  color?: string
+  created_at: Date
+  user_id: number
+  activities: Activity[]
 }
