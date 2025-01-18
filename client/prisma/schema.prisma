@@ -44,6 +44,32 @@ enum Mood {
   VERY_UNPRODUCTIVE
 }
 
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+//TODO: later
+// enum NotificationType {
+//   FRIEND_REQUEST
+//   DAILY_SUMMARY
+//   GOAL_COMPLETED
+//   STREAK_MILESTONE
+// }
+
+// model notification {
+//   id          String
+//   type        NotificationType
+//   title       String
+//   content     String
+//   read        Boolean
+//   user        user
+//   related_day_id    String?    // For daily summaries
+//   related_goal_id   String?    // For goal completions
+//   related_friendship_id String? // For friend requests
+// }
+
 model user {
   id                Int       @id @default(autoincrement())
   created_time      DateTime  @default(now())
@@ -59,6 +85,16 @@ model user {
   days             day[]
   activities       activity[]
   tags             tag[]
+
+  // New relations for accountability feature
+  sent_friend_requests     FriendRequest[] @relation("SentFriendRequests")
+  received_friend_requests FriendRequest[] @relation("ReceivedFriendRequests")
+  
+  friendships_as_user1    Friendship[]    @relation("FriendshipUser1")
+  friendships_as_user2    Friendship[]    @relation("FriendshipUser2")
+
+  sent_reports           AccountabilityReport[] @relation("SentReports")
+  received_reports       AccountabilityReport[] @relation("ReceivedReports")
 }
 
 model payments {
@@ -204,4 +240,67 @@ model entry {
   day_id         String
   activity       activity?       @relation(fields: [activity_id], references: [id])
   activity_id    String?
+}
+
+model FriendRequest {
+  id            String      @id @default(uuid())
+  created_at    DateTime @default(now())
+  status        String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  
+  sender_id     Int
+  receiver_id   Int
+  
+  sender        user     @relation("SentFriendRequests", fields: [sender_id], references: [id])
+  receiver      user     @relation("ReceivedFriendRequests", fields: [receiver_id], references: [id])
+
+  @@unique([sender_id, receiver_id])
+} 
+
+model Friendship {
+  id            String      @id @default(uuid())
+  created_at    DateTime @default(now())
+  
+  user1_id      Int
+  user2_id      Int
+  
+  user1         user     @relation("FriendshipUser1", fields: [user1_id], references: [id])
+  user2         user     @relation("FriendshipUser2", fields: [user2_id], references: [id])
+  
+  accountability_settings AccountabilitySettings?
+
+  @@unique([user1_id, user2_id])
+}
+model AccountabilitySettings {
+  id            String      @id @default(uuid())
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  
+  friendship_id String       @unique
+  friendship    Friendship @relation(fields: [friendship_id], references: [id])
+  
+  share_enabled Boolean   @default(false)
+  frequency     String    @default("DAILY") // DAILY, WEEKLY
+  reminder_time DateTime? // Time of day for reminders
+}
+
+
+
+model AccountabilityReport {
+  id            String      @id @default(uuid())
+  created_at    DateTime @default(now())
+  report_date   DateTime
+  
+  sender_id     Int
+  receiver_id   Int
+  
+  sender        user     @relation("SentReports", fields: [sender_id], references: [id])
+  receiver      user     @relation("ReceivedReports", fields: [receiver_id], references: [id])
+  
+  activities_completed Int
+  goals_progressed    Int
+  main_achievements   String
+  challenges          String?
+  plans_for_tomorrow  String?
+  
+  @@unique([sender_id, receiver_id, report_date])
 }
