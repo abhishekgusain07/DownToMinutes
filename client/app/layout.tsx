@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/react"
 import { GeistSans } from 'geist/font/sans'
 import type { Metadata } from 'next'
 import './globals.css'
+import { ConvexClientProvider } from '@/components/providers/convexClient-provider'
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://abhishekgusain.vercel.app"),
@@ -20,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <AuthWrapper>
-      <html lang="en" suppressHydrationWarning>
+      <html lang="en" suppressHydrationWarning className="dark">
         <head>
           <link
             rel="preload"
@@ -33,17 +34,19 @@ export default function RootLayout({
             as="image"
           />
         </head>
-        <body className={GeistSans.className}>
+        <body className={GeistSans.className} >
           <Provider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              {children}
-              <Toaster />
-            </ThemeProvider>
+            <ConvexClientProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="dark"
+                enableSystem
+                disableTransitionOnChange
+              >
+                {children}
+                <Toaster />
+              </ThemeProvider>
+            </ConvexClientProvider>
           </Provider>
           <Analytics />
         </body>

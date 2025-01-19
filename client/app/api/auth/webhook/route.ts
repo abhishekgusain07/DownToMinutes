@@ -71,7 +71,7 @@ export async function POST(req: Request) {
         const userData = {
           userId: payload?.data?.id,
           email: payload?.data?.email_addresses?.[0]?.email_address,
-          name: `${payload?.data?.first_name ? payload?.data?.first_name : ""}`,
+          name: `${payload?.data?.first_name ? payload?.data?.first_name : ""} ${payload?.data?.last_name ? payload?.data?.last_name : ""}`,
           createdAt: Date.now(),
           profileImage: payload?.data?.profile_image_url,
         };
