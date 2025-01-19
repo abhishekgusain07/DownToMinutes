@@ -39,7 +39,7 @@ const sendFriendRequest = async({
         
         //check if sender and receiver are not friends
         const {data: existingFriendship1, error: existingFriendshipError1} = await supabase
-        .from("friendship")
+        .from("Friendship")
         .select()
         .eq("sender_id", senderData.id)
         .eq("receiver_id", receiverData.id)
@@ -48,7 +48,7 @@ const sendFriendRequest = async({
         console.log("existingFriendship1 🐶", existingFriendship1);
 
         const {data: existingFriendship2, error: existingFriendshipError2} = await supabase
-        .from("friendship")
+        .from("Friendship")
         .select()
         .eq("sender_id", receiverData.id)
         .eq("receiver_id", senderData.id)
@@ -60,6 +60,24 @@ const sendFriendRequest = async({
             throw new Error("You are already friends with this user");
         }
 
+        //check if sender and receiver are already pending friend requests
+        const {data: pendingFriendRequest1, error: pendingFriendRequestError1} = await supabase
+        .from("FriendRequest")
+        .select()
+        .eq("sender_id", senderData.id)
+        .eq("receiver_id", receiverData.id)
+        .single()
+
+        const {data: pendingFriendRequest2, error: pendingFriendRequestError2} = await supabase
+        .from("FriendRequest")
+        .select()
+        .eq("sender_id", receiverData.id)
+        .eq("receiver_id", senderData.id)
+        .single()
+
+        if (pendingFriendRequest1 || pendingFriendRequest2) {
+            throw new Error("You have already sent a friend request to this user");
+        }
         //send friend request
         const {data: friendRequest, error: friendRequestError} = await supabase
         .from("FriendRequest").insert({

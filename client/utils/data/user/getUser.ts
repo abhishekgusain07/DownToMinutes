@@ -25,8 +25,6 @@ export const getUser = async (userId: string): Promise<User | null> => {
             .select()
             .eq("user_id", userId)
             .single();
-
-        console.log("data 🤔 🤔 🤔 🤔", data);
         if (error) {
             console.error("Error fetching user:", error);
             return null;

@@ -1,70 +1,56 @@
 "use server"
-import { User } from "@/utils/types";
+
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { getUser } from "../user/getUser";
+import { User } from "@/utils/types";
 
-export const checkExistingFriendship = async(
-    {
-        senderId,
-        recipientId
-    }: {
-        senderId: string;
-        recipientId: string
-    }
-) => {
+export const checkExistingFriendship = async({
+    senderId,
+    recipientId
+}: {
+    senderId: string;
+    recipientId: string;
+}) => {
     const cookieStore = await cookies();
     const supabase = createServerClient(
         process.env.SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_KEY!,
         {
-        cookies: {
-            get(name: string) {
-            return cookieStore.get(name)?.value;
+            cookies: {
+                get(name: string) {
+                    return cookieStore.get(name)?.value;
+                },
             },
-        },
         }
     );
 
-    try{
-        //check if both sender and receiver exist
+    try {
         const senderData: User | null = await getUser(senderId);
-        const receiverData: User | null = await getUser(recipientId);
-        if (!senderData || !receiverData) {
+        const recipientData: User | null = await getUser(recipientId);
+
+        if (!senderData || !recipientData) {
             throw new Error("User not found");
         }
-        
-        //check if sender and receiver are not friends
-        const {data: existingFriendship1, error: existingFriendshipError1} = await supabase
-        .from("friendship")
-        .select()
-        .eq("sender_id", senderData.id)
-        .eq("receiver_id", receiverData.id)
-        .single()
 
-        console.log("existingFriendship1 🐶", existingFriendship1);
+        // Check if they are friends in either direction
+        const { data: existingFriendship, error: friendshipError } = await supabase
+            .from("Friendship")
+            .select()
+            .or(`user1_id.eq.${senderData.id},user2_id.eq.${senderData.id}`)
+            .or(`user1_id.eq.${recipientData.id},user2_id.eq.${recipientData.id}`)
+            .single();
 
-        const {data: existingFriendship2, error: existingFriendshipError2} = await supabase
-        .from("friendship")
-        .select()
-        .eq("sender_id", receiverData.id)
-        .eq("receiver_id", senderData.id)
-        .single()
-
-        console.log("existingFriendship2 🐶", existingFriendship2);
-
-        if (existingFriendshipError1 || existingFriendshipError2) {
-            throw new Error("Error determining friendship status");
+        if (friendshipError && friendshipError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+            throw new Error("Error checking friendship status");
         }
 
-        if (existingFriendship1 || existingFriendship2) {
-            return true;
-        }else{
-            return false;
-        }
-    }catch(error){
-        console.log(error)
-        throw new Error("Error determining friendship status");
+        return existingFriendship ? true : false;
+
+    } catch (error: any) {
+        console.error(error);
+        throw new Error(error.message);
     }
-    
 }
+
+export default checkExistingFriendship;

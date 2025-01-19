@@ -57,15 +57,15 @@ const SearchFriends = () => {
 
     const sendFriendRequestToUser = async(friendClerkId: string) => {
         try{
-            // const alreadyFriends: boolean =  await checkExistingFriendship({senderId: userId, recipientId: friendClerkId});
-            // if(alreadyFriends) {
-            //     toast.error("You are already friends with this user")
-            //     return;
-            // }
+            const alreadyFriends: boolean =  await checkExistingFriendship({senderId: userId!, recipientId: friendClerkId});
+            if(alreadyFriends) {
+                toast.error("You are already friends with this user")
+                return;
+            }
              await sendFriendRequest({senderId: userId!, receiverId: friendClerkId});
             toast.success("Friend request sent ✅")
         } catch (error: any) {
-            toast.error("Error while sending friend request ❌")
+            toast.error(error.message);
         }
     }
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {

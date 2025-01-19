@@ -85,6 +85,7 @@ model user {
   days             day[]
   activities       activity[]
   tags             tag[]
+  accountability_settings AccountabilitySettings[]
 
   // New relations for accountability feature
   sent_friend_requests     FriendRequest[] @relation("SentFriendRequests")
@@ -266,24 +267,28 @@ model Friendship {
   user1         user     @relation("FriendshipUser1", fields: [user1_id], references: [id])
   user2         user     @relation("FriendshipUser2", fields: [user2_id], references: [id])
   
-  accountability_settings AccountabilitySettings?
+  accountability_settings AccountabilitySettings[]
 
   @@unique([user1_id, user2_id])
 }
+
 model AccountabilitySettings {
   id            String      @id @default(uuid())
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
   
-  friendship_id String       @unique
+  friendship_id String
   friendship    Friendship @relation(fields: [friendship_id], references: [id])
+  
+  user_id       Int
+  user          user     @relation(fields: [user_id], references: [id])
   
   share_enabled Boolean   @default(false)
   frequency     String    @default("DAILY") // DAILY, WEEKLY
   reminder_time DateTime? // Time of day for reminders
+
+  @@unique([friendship_id, user_id])
 }
-
-
 
 model AccountabilityReport {
   id            String      @id @default(uuid())
