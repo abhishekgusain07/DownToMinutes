@@ -1,3 +1,4 @@
+import { NumberDomain } from "recharts/types/util/types";
 import { z } from "zod";
 
 export type userCreateProps = z.infer<typeof userCreateSchema>;
@@ -262,4 +263,13 @@ export type Tag = {
   created_at: Date
   user_id: number
   activities: Activity[]
+}
+
+export interface FriendInfo {
+  id: number;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  user_id: string;
+  profile_image_url: string | null;
 }

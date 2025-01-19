@@ -77,7 +77,7 @@ const SearchFriends = () => {
         <div>
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogTrigger asChild>
-                    <Button variant="ghost" className="text-[#111B21]">
+                    <Button variant="ghost" className="">
                         <MessageSquareMore className="w-5 h-5 mr-2" />
                         Search friends
                     </Button>
