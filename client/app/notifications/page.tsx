@@ -21,8 +21,8 @@ const Notifications = () => {
     }, [fetchNotifications]);
 
     return (
-        <div className="min-h-screen min-w-screen flex flex-col items-center justify-center">
-            Notifications
+        <div className="min-h-screen min-w-screen flex flex-col items-center justify-center p-5">
+            <h1 className="text-3xl font-bold">Notifications</h1>
             <div className="flex items-center justify-center mt-4">
                 {
                     loading ? (

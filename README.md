@@ -20,6 +20,10 @@ A personal project to track and celebrate daily achievements. This tracker helps
 | 2025-01-19 | friend requests / accountability . | :white_check_mark: | Implemented |
 | 2025-01-19 | friend dashboard | :white_check_mark: | Implemented |
 | 2025-01-19 | realTime chat + convex setup | :white_check_mark: | Implemented |
+| 2025-01-19 | notifications schema + server action | :white_check_mark: | Implemented |
+| 2025-01-19 | notifications triggering | :construction: | In Progress |
+| 2025-01-19 | accountability settings  | :construction: | In Progress |
+
 | 2025-01-19 | journal | :hourglass: | Pending |
 | 2025-01-19 | Report Generation | :hourglass: | Pending |
 | 2025-01-19 | progress page ( progress in individual goals ) | :hourglass: | Pending |
