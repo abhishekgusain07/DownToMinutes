@@ -50,25 +50,16 @@ enum FriendshipStatus {
   REJECTED
 }
 
-//TODO: later
-// enum NotificationType {
-//   FRIEND_REQUEST
-//   DAILY_SUMMARY
-//   GOAL_COMPLETED
-//   STREAK_MILESTONE
-// }
-
-// model notification {
-//   id          String
-//   type        NotificationType
-//   title       String
-//   content     String
-//   read        Boolean
-//   user        user
-//   related_day_id    String?    // For daily summaries
-//   related_goal_id   String?    // For goal completions
-//   related_friendship_id String? // For friend requests
-// }
+enum NotificationType {
+  FRIEND_REQUEST_RECEIVED
+  FRIEND_REQUEST_ACCEPTED
+  DAILY_SUMMARY
+  GOAL_COMPLETED
+  SUBGOAL_COMPLETED
+  STREAK_MILESTONE
+  ACCOUNTABILITY_REPORT_RECEIVED
+  ACCOUNTABILITY_REMINDER
+}
 
 model user {
   id                Int       @id @default(autoincrement())
@@ -86,7 +77,8 @@ model user {
   activities       activity[]
   tags             tag[]
   accountability_settings AccountabilitySettings[]
-
+  notifications     Notification[]
+  
   // New relations for accountability feature
   sent_friend_requests     FriendRequest[] @relation("SentFriendRequests")
   received_friend_requests FriendRequest[] @relation("ReceivedFriendRequests")
@@ -164,6 +156,7 @@ model goal {
   user        user      @relation(fields: [user_id], references: [id])
   user_id     Int
   subgoals    subgoal[]
+  notifications     Notification[]
 }
 
 model subgoal {
@@ -180,6 +173,7 @@ model subgoal {
   goal_id     String
   user        user      @relation(fields: [user_id], references: [id])
   user_id     Int
+  notifications     Notification[]
 }
 
 model tag {
@@ -222,6 +216,7 @@ model day {
   total_focus_time Int?     
   distractions    String[]  
   highlights      String[]  
+  notifications     Notification[]
 }
 
 model entry {
@@ -268,6 +263,7 @@ model Friendship {
   user2         user     @relation("FriendshipUser2", fields: [user2_id], references: [id])
   
   accountability_settings AccountabilitySettings[]
+  notifications     Notification[]
 
   @@unique([user1_id, user2_id])
 }
@@ -307,5 +303,39 @@ model AccountabilityReport {
   challenges          String?
   plans_for_tomorrow  String?
   
+  notifications     Notification[]
+  
   @@unique([sender_id, receiver_id, report_date])
+}
+
+model Notification {
+  id              String           @id @default(uuid())
+  createdAt       DateTime         @default(now())
+  type            NotificationType
+  title           String
+  content         String
+  isRead          Boolean          @default(false)
+  
+  // Recipient user
+  userId          Int
+  user            user             @relation(fields: [userId], references: [id])
+  
+  // Optional relations based on notification type
+  goalId          String?          // For goal/subgoal related notifications
+  goal            goal?            @relation(fields: [goalId], references: [id])
+  
+  subgoalId       String?          // For subgoal related notifications
+  subgoal         subgoal?         @relation(fields: [subgoalId], references: [id])
+  
+  dayId           String?          // For daily summary notifications
+  day             day?             @relation(fields: [dayId], references: [id])
+  
+  friendshipId    String?             // For friendship related notifications
+  friendship      Friendship?      @relation(fields: [friendshipId], references: [id])
+  
+  reportId        String?          // For accountability report notifications
+  report          AccountabilityReport? @relation(fields: [reportId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
 }

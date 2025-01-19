@@ -273,3 +273,43 @@ export interface FriendInfo {
   user_id: string;
   profile_image_url: string | null;
 }
+
+export enum NotificationType {
+  FRIEND_REQUEST_RECEIVED = "FRIEND_REQUEST_RECEIVED",
+  FRIEND_REQUEST_ACCEPTED = "FRIEND_REQUEST_ACCEPTED",
+  DAILY_SUMMARY = "DAILY_SUMMARY",
+  GOAL_COMPLETED = "GOAL_COMPLETED",
+  SUBGOAL_COMPLETED = "SUBGOAL_COMPLETED",
+  STREAK_MILESTONE = "STREAK_MILESTONE",
+  ACCOUNTABILITY_REPORT_RECEIVED = "ACCOUNTABILITY_REPORT_RECEIVED",
+  ACCOUNTABILITY_REMINDER = "ACCOUNTABILITY_REMINDER"
+}
+
+export interface Notification {
+  id: string;
+  createdAt: Date;
+  type: NotificationType;
+  title: string;
+  content: string;
+  isRead: boolean;
+  
+  // Recipient user
+  userId: number;
+  user?: User;
+  
+  // Optional relations based on notification type
+  goalId?: string;
+  goal?: Goal;
+  
+  subgoalId?: string;
+  subgoal?: Subgoal;
+  
+  dayId?: string;
+  day?: Day;
+  
+  friendshipId?: string;
+  friendship?: Friendship;
+  
+  reportId?: string;
+  report?: AccountabilityReport;
+}
