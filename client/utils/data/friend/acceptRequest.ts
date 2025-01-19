@@ -6,6 +6,8 @@ import { getUser } from "../user/getUser";
 import { FriendRequest, FriendshipStatus, User } from "@/utils/types";
 import { getFriendRequest } from "./getFriendRequest";
 import { uid } from "uid";
+import { getFriendRequestBySenderAndRecieversId } from "./getFriendRequestBySenderAndRecieversId";
+import { changeFriendRequestStatus } from "./changeFriendRequestStatus";
 
 export const acceptRequest = async({
     requestId,
@@ -91,7 +93,18 @@ export const acceptRequest = async({
             throw new Error(createSettingsError.message);
         }
 
-        console.log("Friend request accepted and accountability settings created for both users 🐶 🐶 🐶 🐶 🐶 🐶 🐶 🐶 🐶 ");
+        //clear the friend request from the other side which is pending
+        const similarFriendRequest: FriendRequest | null = await getFriendRequestBySenderAndRecieversId({
+            senderId: friendRequestData.receiver_id,
+            recieverId: friendRequestData.sender_id
+        });
+        if(similarFriendRequest) {
+            await changeFriendRequestStatus({
+                requestId: similarFriendRequest.id,
+                status: FriendshipStatus.ACCEPTED
+            });
+        }
+        
         return {
             success: true,
             message: "Friend request accepted"
