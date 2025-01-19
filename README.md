@@ -17,11 +17,12 @@ A personal project to track and celebrate daily achievements. This tracker helps
 | 2025-01-17 | Database setup  | :white_check_mark: | Implemented |
 | 2025-01-18 | AI Integration | :white_check_mark: | Implemented |
 | 2025-01-18 | server actions | :white_check_mark: | Implemented |
-| 2025-01-18 | friend requests / accountability . | :construction: | In progress |
-| 2025-01-18 | realTime chat  | :hourglass: | Pending |
-| 2025-01-18 | journal | :hourglass: | Pending |
-| 2025-01-18 | Report Generation | :hourglass: | Pending |
-| 2025-01-18 | progress page ( progress in individual goals ) | :hourglass: | Pending |
+| 2025-01-19 | friend requests / accountability . | :white_check_mark: | Implemented |
+| 2025-01-19 | friend dashboard | :construction: | In progress |
+| 2025-01-19 | realTime chat  | :hourglass: | Pending |
+| 2025-01-19 | journal | :hourglass: | Pending |
+| 2025-01-19 | Report Generation | :hourglass: | Pending |
+| 2025-01-19 | progress page ( progress in individual goals ) | :hourglass: | Pending |
 
 
 
