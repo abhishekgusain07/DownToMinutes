@@ -44,9 +44,6 @@ export const declineRequest = async({
         if(updateError) {
             throw new Error(updateError.message);
         }
-        //todo: create entry in friendship table
-
-        //todo: create entry in user table
         return {
             success: true,
             message: "Friend request declined ✅"
