@@ -44,7 +44,10 @@ const SearchFriends = () => {
     )
     useEffect(() => {
         const search = async () => {
-            if(!debouncedSearchTerm) return;
+            if(!debouncedSearchTerm){
+                setSearchResults([])
+                return;
+            }
             const searchResults = await searchAllUserExceptCurrent({currentUserId: userId!, searchTerm: debouncedSearchTerm})
             setSearchResults(searchResults!)
         }

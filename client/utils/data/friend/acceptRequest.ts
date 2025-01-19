@@ -33,7 +33,7 @@ export const acceptRequest = async({
         if (!userData || !friendRequestData) {
             throw new Error("User or friend request not found");
         }
-        //check if this user is sender of this request
+        //check if this user is receiver of this request
         if(userData.id !== friendRequestData.receiver_id) {
             throw new Error("You are not the receiver of this friend request");
         }
@@ -45,8 +45,10 @@ export const acceptRequest = async({
             throw new Error(updateError.message);
         }
         //todo: create entry in friendship table
+        
 
         //todo: create entry in user table
+
         return {
             success: true,
             message: "Friend request accepted ✅"

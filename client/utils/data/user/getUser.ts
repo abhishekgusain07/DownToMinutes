@@ -4,7 +4,7 @@ import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
 import { User } from "@/utils/types";
 
-export const getUser = async (clerkUserId: string): Promise<User | null> => {
+export const getUser = async (userId: string): Promise<User | null> => {
     const cookieStore = await cookies();
 
     const supabase = createServerClient(
@@ -23,9 +23,10 @@ export const getUser = async (clerkUserId: string): Promise<User | null> => {
         const { data, error } = await supabase
             .from("user")
             .select()
-            .eq("user_id", clerkUserId)
+            .eq("user_id", userId)
             .single();
 
+        console.log("data 🤔 🤔 🤔 🤔", data);
         if (error) {
             console.error("Error fetching user:", error);
             return null;

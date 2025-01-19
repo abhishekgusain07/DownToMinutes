@@ -32,18 +32,25 @@ export const searchAllUserExceptCurrent = async ({
         }
         const { data, error } = await supabase
             .from("user")
-            .select()
-            .neq("user_id", currentUserId)
-            .ilike("first_name", `%${searchTerm}%`)
-            .ilike("last_name", `%${searchTerm}%`)
-            .ilike("email", `%${searchTerm}%`);
+            .select('*')
+            .neq("id", userData.id)
 
-        if (error) {
-            console.error("Error searching users:", error);
-            return null;
+        if(error) {
+            throw new Error("Error searching users:", error);
         }
 
-        const filteredData = data.map((user: User) => {
+        if (!data) {
+            return [];
+        }
+        const users = data.filter((user: User) => {
+            return (
+                user?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                user?.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        });
+
+        const filteredData = users.map((user: User) => {
             return {
                 id: user.id,
                 user_id: user.user_id,
