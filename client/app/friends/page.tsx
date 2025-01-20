@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@clerk/nextjs";
 import Link from "next/link";
 import AllFriends from "./_component/allFriends";
+import { TabsDemo } from "./_component/tabsDemo";
 
 const FriendsPage = () => {
     return (
@@ -16,6 +17,8 @@ const FriendsPage = () => {
             <div className="flex gap-5 items-center justify-center mt-4 p-5">
                 <AllFriends />
             </div>
+
+            <TabsDemo />
         </div>
     );
 };

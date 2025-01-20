@@ -33,7 +33,7 @@ export const updateAccountabilitySettings = async ({
     );
 
     try {
-        // Update only this user's settings for this friendship
+        
         const { error } = await supabase
             .from("AccountabilitySettings")
             .update(settings)
