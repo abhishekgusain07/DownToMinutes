@@ -70,137 +70,11 @@ export default function FormChat({ conversationId, userId }: {
 
   const [attachments, setAttachments] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
-  const [isListening, setIsListening] = useState(false)
-  const [speechSupported, setSpeecSupported] = useState(false)
-  const [hasMicPermission, setHasMicPermission] = useState<boolean | null>(null)
-
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
 
   const sendMessage = useMutation(api.chat.sendMessage)
 
-  const checkMicrophonePermission = async () => {
-    try {
-      const permissionResult = await navigator.mediaDevices.getUserMedia({ audio: true })
-
-      setHasMicPermission(true)
-
-      permissionResult.getTracks().forEach(track => track.stop())
-    } catch (error) {
-      setHasMicPermission(false)
-      console.log("Microphone permissions error", error)
-    }
-  }
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognitionConstructor = 
-        window.SpeechRecognition || 
-        window.webkitSpeechRecognition;
-
-      if (SpeechRecognitionConstructor) {
-        setSpeecSupported(true)
-
-        recognitionRef.current = new SpeechRecognitionConstructor()
-        const recognition = recognitionRef.current
-
-        recognition.continuous = true
-        recognition.interimResults = true
-        recognition.lang = "en-US"
-
-        recognition.onstart = () => {
-          setIsListening(true)
-          toast.success("Started Listening")
-        }
-
-        recognition.onresult = (event: SpeechRecognitionEvent) => {
-          const current = event.resultIndex;
-          const transcript = event.results[current][0].transcript
-          const currentMessage = watch("message") || ""
-
-          if (event.results[current].isFinal) {
-            setValue('message', currentMessage + transcript + " ")
-          }
-        }
-
-        recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-          console.log('Speech recognition error: ', event.error)
-          setIsListening(false)
-
-          switch (event.error) {
-            case 'not-allowed':
-              toast.error("Microphone access denied. Please enable microphone permissions.");
-              setHasMicPermission(false);
-              break;
-            case 'no-speech':
-              toast.error("No speech detected. Please try again.");
-              break;
-            case 'network':
-              toast.error("Network error. Please check your connection.");
-              break;
-            default:
-              toast.error("Speech recognition error. Please try again.");
-          }
-
-        }
-
-        recognition.onend = () => {
-          setIsListening(false);
-          toast.info("Stopped listening");
-        };
-
-        // Check initial microphone permission
-        checkMicrophonePermission();
-
-      }
-    }
-
-  }, [setValue, watch])
-
-
-  const toggleListening = async () => {
-    if (!recognitionRef.current) return
-
-    if (isListening) {
-      recognitionRef.current.stop()
-    } else {
-      if (hasMicPermission === false) {
-        toast.error(
-          "Microphone access denied. Please enable microphone permissions in your browser settings.",
-          {
-            action: {
-              label: "How to enable",
-              onClick: () => {
-                // Open help dialog or link to instructions
-                toast.info(
-                  "To enable microphone: Click the camera/microphone icon in your browser's address bar and allow access",
-                  { duration: 5000 }
-                );
-              },
-            },
-          }
-        )
-        return
-      }
-
-      try {
-        await checkMicrophonePermission()
-
-        if (hasMicPermission) {
-          recognitionRef.current.start()
-        }
-      } catch (error) {
-        console.log('Error starting speech recognition ', error)
-        toast.error("Failed to start speech recognition. Please try again.");
-      }
-    }
-  }
-
   const onSubmit = async (data: FormInputs) => {
     try {
-      if (isListening && recognitionRef.current) {
-        recognitionRef.current.stop()
-      }
-
       for (const imageUrl of attachments) {
         await sendMessage({
           type: "image",
@@ -315,21 +189,10 @@ export default function FormChat({ conversationId, userId }: {
         <Input
           {...register("message")}
           placeholder={
-            isUploading ? "Uploading..." : isListening ? "Listening..." : "Type a message"
+            isUploading ? "Uploading..." : "Type a message"
           }
           className="flex-1 bg-background dark:bg-[#2A3942] border-none placeholder:text-muted-foreground"
         />
-        {speechSupported && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={toggleListening}
-            className={`transition-colors ${isListening ? "text-red-500" : hasMicPermission === false ? "text-gray-400" : ""}`}
-          >
-            <Mic className={"h-6 w-6 " + isListening ? " animate-pulse" : ""} />
-          </Button>
-        )}
         <Button type="submit" size="icon" disabled={isUploading || !attachments.length && !watch("message")}>
           <Send className="w-5 h-5" />
         </Button>

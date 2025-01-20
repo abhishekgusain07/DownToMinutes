@@ -5,6 +5,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createGoal } from "@/utils/data/goals/createGoal"
 import { toast } from "sonner"
+import { Goal } from "@/utils/types"
 
 type FormData = {
     title: string
@@ -27,12 +28,12 @@ const NewGoal = () => {
     const onSubmit = async (data: FormData) => {
         try {
             setLoading(true)
-            await createGoal({
+            const goal: Goal | null = await createGoal({
                 ...data,
                 start_date: new Date(data.start_date),
                 end_date: new Date(data.end_date),
             })
-            router.push("/goals")
+            router.push(`/goals/${goal?.id}`)
             router.refresh()
             toast.success("Goal created successfully")
         } catch (error) {

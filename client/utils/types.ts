@@ -313,3 +313,10 @@ export interface Notification {
   reportId?: string;
   report?: AccountabilityReport;
 }
+
+export type SubgoalSuggestion = {
+  title: string;
+  description?: string;
+  frequency: Frequency;
+  due_date?: Date;
+};

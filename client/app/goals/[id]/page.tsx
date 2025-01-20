@@ -1,8 +1,10 @@
+
 import { Button } from "@/components/ui/button";
 import { getSubgoalsOfGoals } from "@/utils/data/subgoals/getSubgoalsOfGoals";
 import { Subgoal } from "@/utils/types";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
+import SubgoalsDisplay from "../_components/subgoalSection";
 
 const Goal = async({ params }: 
     {
@@ -18,7 +20,7 @@ const Goal = async({ params }:
         userId: userId!,
         goalId: goalId
     })
-
+    
     return (
         <div>
             <div>{goalId}</div>
@@ -35,11 +37,12 @@ const Goal = async({ params }:
                 ))}
             </div>
 
-            <div className="mt-4">
+            <div className="mt-4 flex justify-center items-center gap-4">
                 <Link href={`/goals/${goalId}/subgoals/new`}>
                     <Button>Add Subgoal</Button>
                 </Link>
             </div>
+            <SubgoalsDisplay goalId={goalId} />
         </div>
     )
 }

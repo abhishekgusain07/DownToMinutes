@@ -5,7 +5,7 @@ import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { getUser } from "../user/getUser"
 import { getGoal } from "../goals/getGoal"
-import { Frequency } from "@/utils/types"
+import { Frequency, Subgoal } from "@/utils/types"
 import { uid } from "uid"
 
 type CreateSubgoalInput = {
@@ -16,7 +16,7 @@ type CreateSubgoalInput = {
     goal_id: string
 }
 
-export const createSubgoal = async (subgoalData: CreateSubgoalInput) => {
+export const createSubgoal = async (subgoalData: CreateSubgoalInput): Promise<Subgoal> => {
     const cookieStore = await cookies();
     const { userId } = await auth();
     
@@ -71,14 +71,15 @@ export const createSubgoal = async (subgoalData: CreateSubgoalInput) => {
                     updated_at: now
                 },
             ])
-            .select();
+            .select()
+            .single();
 
         if (error) {
             console.error("Error creating subgoal:", error);
             throw new Error("Error creating subgoal");
         }
 
-        return data;
+        return data as Subgoal;
     } catch (error) {
         console.error("Error in createSubgoal:", error);
         throw error;

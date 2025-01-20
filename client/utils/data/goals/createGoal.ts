@@ -1,5 +1,6 @@
 "use server"
 
+import { Goal } from "@/utils/types"
 import { auth } from "@clerk/nextjs/server"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
@@ -13,7 +14,7 @@ type CreateGoalInput = {
     end_date: Date
 }
 
-export const createGoal = async (goalData: CreateGoalInput) => {
+export const createGoal = async (goalData: CreateGoalInput): Promise<Goal | null> => {
     const cookieStore = await cookies();
     const { userId } = await auth();
     
@@ -66,7 +67,8 @@ export const createGoal = async (goalData: CreateGoalInput) => {
                     updated_at: now
                 },
             ])
-            .select();
+            .select()
+            .single();
 
         if (error) {
             console.error("Error creating goal:", error);

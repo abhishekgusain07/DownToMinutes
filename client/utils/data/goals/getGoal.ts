@@ -2,8 +2,9 @@
 
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import { Goal } from "@/utils/types";
 
-export const getGoal = async (goalId: string) => {
+export const getGoal = async (goalId: string):Promise<Goal | null> => {
     const cookieStore = await cookies();
 
     const supabase = createServerClient(
@@ -23,6 +24,10 @@ export const getGoal = async (goalId: string) => {
             .select()
             .eq("id", goalId)
             .single()
+        if(error) {
+            console.error("Error fetching goal:", error);
+            return null;
+        }
         return data
     } catch (error) {
         console.error("Error fetching goal:", error);

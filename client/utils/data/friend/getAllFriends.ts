@@ -59,7 +59,9 @@ export const getAllFriends = async (): Promise<FriendInfo[] | null> => {
             throw new Error(friendsError.message);
         }
 
-        // Format the response to match the expected type
+        //TODO: add accountability settings for each friend
+        //TODO: format the response to match the expected type
+        
         return friends;
     } catch (error: any) {
         console.error("Error getting friends:", error);
