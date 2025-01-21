@@ -320,3 +320,39 @@ export type SubgoalSuggestion = {
   frequency: Frequency;
   due_date?: Date;
 };
+
+export enum PlanStatus {
+  NOT_STARTED = "NOT_STARTED",
+  STARTED = "STARTED",
+  IN_PROGRESS = "IN_PROGRESS",
+  NOT_DONE = "NOT_DONE"
+}
+
+export interface Plan {
+  id: string;
+  task: string;
+  description?: string;
+  from_time: string;
+  to_time: string;
+  status: PlanStatus;
+  effectiveness: number;
+  distractions: number;
+  note?: string;
+  created_at: Date;
+  updated_at: Date;
+  day_id: string;
+}
+
+export interface PlanFeedback {
+  id: string;
+  created_at: Date;
+  day_id: string;
+  overall_summary: string;
+  achievements: string[];
+  improvement_areas: string[];
+  recommendations: string[];
+  productivity_score: number;
+  goal_alignment?: string;
+  time_management?: string;
+  pattern_insights?: string;
+}

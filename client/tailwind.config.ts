@@ -16,7 +16,7 @@ const config: Config = {
     "./src/**/*.{ts,tsx}",
   ],
   // Enabling dark mode
-  darkMode: "class", // Assuming you want to enable dark mode based on the class strategy
+  darkMode: ["class", "class"], // Assuming you want to enable dark mode based on the class strategy
   theme: {
     // Merging container configuration from the second file
     container: {
@@ -32,6 +32,8 @@ const config: Config = {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+          'dots-pattern': 'radial-gradient(transparent 1px, white 1px)',
+        'dots-pattern-dark': 'radial-gradient(transparent 1px, rgb(0 0 0) 1px)',
       },
       // Merging colors, borderRadius, keyframes, and animation from the second file
       colors: {

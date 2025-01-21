@@ -19,6 +19,7 @@ const isProtectedRoute = config.auth.enabled
       "/friends(.*)",
       "/logs(.*)",
       "/notifications(.*)",
+      "/plans(.*)"
     ])
   : () => false;
 

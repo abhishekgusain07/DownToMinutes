@@ -13,6 +13,12 @@ enum Priority {
   MEDIUM
   HIGH
 }
+enum PlanStatus {
+  NOT_STARTED
+  STARTED
+  IN_PROGRESS
+  NOT_DONE
+}
 
 enum Frequency {
   WEEKLY
@@ -212,7 +218,9 @@ model day {
   updated_at      DateTime  @updatedAt
   user            user      @relation(fields: [user_id], references: [id])
   user_id         Int
+  plans           Plan[]
   entries         entry[]
+  plan_feedback   PlanFeedback[]
   total_focus_time Int?     
   distractions    String[]  
   highlights      String[]  
@@ -238,6 +246,36 @@ model entry {
   activity_id    String?
 }
 
+model Plan {
+  id            String      @id @default(uuid())
+  task          String
+  description   String?
+  from_time     String
+  to_time       String
+  status        PlanStatus  @default(NOT_STARTED)
+  effectiveness Int         @default(5)
+  distractions  Int         @default(5)
+  note          String?
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+  day           day         @relation(fields: [day_id], references: [id])
+  day_id        String
+}
+model PlanFeedback {
+  id                String    @id @default(uuid())
+  created_at        DateTime  @default(now())
+  day               day       @relation(fields: [day_id], references: [id]) 
+  day_id            String
+  @@index([day_id])
+  overall_summary   String    // Overall day analysis
+  achievements      String[]  // What went well
+  improvement_areas String[]  // Areas needing improvement
+  recommendations   String[]  // Actionable recommendations
+  productivity_score Int      // AI-calculated productivity score (1-100)
+  goal_alignment    String?   // How well daily activities aligned with goals
+  time_management   String?   // Time management analysis
+  pattern_insights  String?   // Identified patterns and trends
+}
 model FriendRequest {
   id            String      @id @default(uuid())
   created_at    DateTime @default(now())
