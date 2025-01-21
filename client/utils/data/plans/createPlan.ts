@@ -7,6 +7,7 @@ import { createServerClient } from "@supabase/ssr";
 import { User } from "@/utils/types";
 import { getUser } from "../user/getUser";
 import { uid } from "uid";
+import { revalidatePath } from "next/cache";
 
 
 // Format function to match Supabase datetime format
@@ -121,7 +122,8 @@ export const createPlan = async ({data}:{data: z.infer<typeof planFormSchema>}) 
         if(plansError || !plansData){
             console.log(plansError)
             throw new Error("Failed to create plan");
-        }
+        }   
+        revalidatePath("/plans");
         return plansData
 
     } catch (error) {

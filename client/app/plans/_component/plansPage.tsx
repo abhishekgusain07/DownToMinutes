@@ -19,15 +19,17 @@ import { useForm } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
 import { planFormSchema } from '@/utils/zod/schemas';
 import { createPlan } from '@/utils/data/plans/createPlan';
+import { useRouter } from 'next/navigation';
 
 
 const PlansPage = () => {
     const { selectedDate } = usePlanDateStore();
-    const [plans, setPlans] = useState<Plan[] | null>(null);
+    const [plans, setPlans] = useState<Plan[]| null>(null);
     const [open, setOpen] = useState<boolean>(false);
     const [plansLoading, setPlansLoading] = useState<boolean>(false);
     var isToday = isSameDay(selectedDate, new Date());
     var isPast = selectedDate < new Date(new Date().setHours(0, 0, 0, 0));
+    const router = useRouter();
     useEffect(() => {
         isToday = isSameDay(selectedDate, new Date());
         isPast = selectedDate < new Date(new Date().setHours(0, 0, 0, 0));
@@ -36,6 +38,7 @@ const PlansPage = () => {
                 setPlansLoading(true);
                 const data = await getPlansForTheDay({date: selectedDate});
                 setPlans(data);
+                router.refresh();
                 toast.success("fetched plans for the day");
             } catch (e) {
                 toast.error("cannot fetch plans for the day");
@@ -45,6 +48,12 @@ const PlansPage = () => {
         }
         fetchPlansForTheDay();
     }, [selectedDate]);
+    const handleSuccess = () => {
+        setOpen(false);
+    };
+    const updatePlans = async (newPlans: (Plan[] | null)) => {
+        setPlans(newPlans);
+    };
     return (
         <div className="p-6">
             <div className="mb-6">
@@ -92,7 +101,7 @@ const PlansPage = () => {
                                 Add a new plan for {format(selectedDate, "PPP")}
                             </DialogDescription>
                         </DialogHeader>
-                        <PlansForm onSuccess={() => {setOpen(false)}} />
+                        <PlansForm onSuccess={handleSuccess} updatePlans={updatePlans} selectedDate={selectedDate} />
                     </DialogContent>
                 </Dialog>
             </div>
@@ -101,7 +110,8 @@ const PlansPage = () => {
 };
 
 
-const PlansForm = ({onSuccess}: {onSuccess: () => void}) => {
+const PlansForm = ({onSuccess, updatePlans, selectedDate}: {onSuccess: () => void, updatePlans: (newPlans: Plan[]|null) => void, selectedDate: Date}) => {
+    const router = useRouter();
     const form = useForm<z.infer<typeof planFormSchema>>({
         resolver: zodResolver(planFormSchema),
         defaultValues: {
@@ -115,21 +125,25 @@ const PlansForm = ({onSuccess}: {onSuccess: () => void}) => {
             note: "",
         }
     });
-    async function onSubmit(values: z.infer<typeof planFormSchema>) {
+    const handleSubmit = async (values: any) => {
         try {
             await createPlan({data: values});
             form.reset();
             onSuccess();
+            const data = await getPlansForTheDay({date: selectedDate});
+            updatePlans(data);
+            router.push("/plans")
+            router.refresh();
             toast.success("Plan created successfully!");
         } catch (error) {
             console.error(error);
             toast.error("Failed to create plan");
         }
-    }
+    };
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
                 <FormField
                     control={form.control}
                     name="task"
