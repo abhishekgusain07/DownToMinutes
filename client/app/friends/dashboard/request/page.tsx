@@ -46,25 +46,30 @@ const RequestPage = () => {
     }
   return (
     <div className="min-h-screen min-w-screen flex flex-col items-center justify-center">
-      <h1>Request Page</h1>
+      <h1 className="text-3xl font-bold">Friend Requests</h1>
       {
         requestsLoading ? (
             <Loader2 className="animate-spin size-4" />
         ) : (
-            friendRequests?.map((request) => (
-                <div key={request.id} className="flex items-center justify-around w-[30vw]">
-                    <h2>{request.senderData?.first_name} {request.senderData?.last_name}</h2>
-                    <div className="flex gap-2">
-                        <Button variant="ghost" className="border" onClick={() => acceptFriendRequest(request.id)}>
-                            ✅
-                        </Button>
-                        <Button variant="ghost" className="border" onClick={() => declineFriendRequest(request.id)}>
-                            ❌
-                        </Button>
+            friendRequests && friendRequests.length > 0 ?
+            (   
+                friendRequests?.map((request) => (
+                    <div key={request.id} className="flex items-center justify-around w-[30vw]">
+                        <h2>{request.senderData?.first_name} {request.senderData?.last_name}</h2>
+                        <div className="flex gap-2">
+                            <Button variant="ghost" className="border" onClick={() => acceptFriendRequest(request.id)}>
+                                ✅
+                            </Button>
+                            <Button variant="ghost" className="border" onClick={() => declineFriendRequest(request.id)}>
+                                ❌
+                            </Button>
+                        </div>
                     </div>
-                    
-                </div>
-            ))
+                ))
+            ):
+            (
+                <h1 className="text-center">No friend requests</h1>
+            )
         )
       }
     </div>
