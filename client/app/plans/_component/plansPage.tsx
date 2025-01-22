@@ -20,16 +20,33 @@ import { Loader2 } from 'lucide-react';
 import { planFormSchema } from '@/utils/zod/schemas';
 import { createPlan } from '@/utils/data/plans/createPlan';
 import { useRouter } from 'next/navigation';
+import { generatePlans } from '@/utils/ai/generatePlans';
+import ShowSuggestAiPlans from './showSuggestAiPlans';
 
 
 const PlansPage = () => {
     const { selectedDate } = usePlanDateStore();
     const [plans, setPlans] = useState<Plan[]| null>(null);
     const [open, setOpen] = useState<boolean>(false);
+    const [aiPlansloading, setAiPlansLoading] = useState<boolean>(false);
+    const [aiPlans, setAiPlans] = useState<Plan[]|null>(null);
     const [plansLoading, setPlansLoading] = useState<boolean>(false);
     var isToday = isSameDay(selectedDate, new Date());
     var isPast = selectedDate < new Date(new Date().setHours(0, 0, 0, 0));
     const router = useRouter();
+    const generateAIPlans = async () => {
+        try {
+            setAiPlansLoading(true);
+            const aiPlans: Plan[] | null = await generatePlans();
+            setAiPlans(aiPlans);
+            router.refresh();
+            toast.success("fetched ai plans for the day");
+        } catch (e) {
+            toast.error("cannot fetch ai plans for the day");
+        } finally {
+            setAiPlansLoading(false);
+        }
+    }
     useEffect(() => {
         isToday = isSameDay(selectedDate, new Date());
         isPast = selectedDate < new Date(new Date().setHours(0, 0, 0, 0));
@@ -104,6 +121,22 @@ const PlansPage = () => {
                         <PlansForm onSuccess={handleSuccess} updatePlans={updatePlans} selectedDate={selectedDate} />
                     </DialogContent>
                 </Dialog>
+                <Button onClick={generateAIPlans} disabled={aiPlansloading}> Generate AI Plans</Button>
+            </div>
+            <div className='mt-4'>
+            {
+                aiPlansloading ? (
+                    <div className='text-muted-foreground'>Generating AI Plans <Loader2 className="animate-spin size-4" /></div>
+                ) : (
+                    aiPlans && aiPlans.length > 0 ? (
+                        <div>
+                            <ShowSuggestAiPlans plans={aiPlans} />
+                        </div>
+                    ) : (
+                        <div>No AI plans found for the day</div>
+                    )
+                )
+            }
             </div>
         </div>
     );
