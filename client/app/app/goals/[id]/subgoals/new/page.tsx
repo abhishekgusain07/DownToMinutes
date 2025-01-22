@@ -1,4 +1,4 @@
-import SubgoalForm from "@/app/goals/_componenet/subgoalform";
+import SubgoalForm from "@/app/app/goals/_componenet/subgoalform";
 
 const NewSubgoal = async ({ params }: {
     params: Promise<{
