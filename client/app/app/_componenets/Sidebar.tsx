@@ -1,50 +1,34 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import { LayoutDashboard, UserCog, Settings, LogOut, LucideGoal, PersonStanding, BellIcon, PlaneTakeoffIcon } from "lucide-react";
+import { LayoutDashboard, UserCog, Settings, LogOut, LucideGoal, PersonStanding, BellIcon, PlaneTakeoffIcon, Loader2, PersonStandingIcon } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { SignOutButton } from "@clerk/nextjs";
+import { links } from "./constants/constant";
+import { useUserInfoStore } from "@/store/useUserInfoStore";
+
+import { getUser } from "@/utils/data/user/getUser";
+import { User } from "@/utils/types";
+import { useUser } from "@clerk/nextjs";
 
 export function AppSidebar({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const links = [
-    {
-      label: "Goals",
-      href: "/app/goals",
-      icon: (
-        <LucideGoal className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
-    {
-      label: "Friends",
-      href: "/app/friends",
-      icon: (
-        <PersonStanding className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
-    {
-      label: "Notifications",
-      href: "/app/notifications",
-      icon: (
-        <BellIcon className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
-    {
-      label: "Plans",
-      href: "/app/plans",
-      icon: (
-        <PlaneTakeoffIcon className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
-    //Todo: logout button
-  ];
   const [open, setOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  if(!isMounted){
+    return <div className="min-h-screen min-w-screen flex items-center justify-center">
+      <Loader2 className="animate-spin size-4" />
+    </div>;
+  }
+  const {name} = useUserInfoStore.getState().userInfo;
   return (
     <div
       className={cn(
@@ -65,16 +49,10 @@ export function AppSidebar({
           <div>
             <SidebarLink
               link={{
-                label: "Manu Arora",
+                label: name,
                 href: "#",
                 icon: (
-                  <Image
-                    src="https://images.unsplash.com/photo-1499714608240-22fc6ad53fb2?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=76&q=80"
-                    className="h-7 w-7 flex-shrink-0 rounded-full"
-                    width={50}
-                    height={50}
-                    alt="Avatar"
-                  />
+                  <PersonStandingIcon className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
                 ),
               }}
             />
@@ -98,7 +76,7 @@ export const Logo = () => {
         animate={{ opacity: 1 }}
         className="font-medium text-black dark:text-white whitespace-pre"
       >
-        Acet Labs
+        DownToMinutes
       </motion.span>
     </Link>
   );
@@ -112,31 +90,5 @@ export const LogoIcon = () => {
     >
       <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
     </Link>
-  );
-};
-
-// Dummy dashboard component with content
-const Dashboard = () => {
-  return (
-    <div className="flex flex-1">
-      <div className="p-2 md:p-10 rounded-tl-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 flex flex-col gap-2 flex-1 w-full h-full">
-        <div className="flex gap-2">
-          {[...new Array(4)].map((i) => (
-            <div
-              key={"first-array" + i}
-              className="h-20 w-full rounded-lg  bg-gray-100 dark:bg-neutral-800 animate-pulse"
-            ></div>
-          ))}
-        </div>
-        <div className="flex gap-2 flex-1">
-          {[...new Array(2)].map((i) => (
-            <div
-              key={"second-array" + i}
-              className="h-full w-full rounded-lg  bg-gray-100 dark:bg-neutral-800 animate-pulse"
-            ></div>
-          ))}
-        </div>
-      </div>
-    </div>
   );
 };
