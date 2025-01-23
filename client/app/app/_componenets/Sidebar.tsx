@@ -8,10 +8,13 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { links } from "./constants/constant";
 import { useUserInfoStore } from "@/store/useUserInfoStore";
-
-import { getUser } from "@/utils/data/user/getUser";
-import { User } from "@/utils/types";
-import { useUser } from "@clerk/nextjs";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { SignOutButton } from "@clerk/nextjs";
 
 export function AppSidebar({
   children,
@@ -46,17 +49,24 @@ export function AppSidebar({
               ))}
             </div>
           </div>
-          <div>
-            <SidebarLink
-              link={{
-                label: name,
-                href: "#",
-                icon: (
-                  <PersonStandingIcon className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-                ),
-              }}
-            />
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <SidebarLink
+                link={{
+                  label: name,
+                  href: "#",
+                  icon: (
+                    <PersonStandingIcon className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+                  ),
+                }}
+              />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setOpen(false)}>
+                <SignOutButton />
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </SidebarBody>
       </Sidebar>
       {children}

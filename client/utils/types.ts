@@ -47,10 +47,10 @@ const userUpdateSchema = z.object({
   user_id: z.string().describe("user ID"),
 });
 
-export enum Priority { 
-  LOW,
-  MEDIUM,
-  HIGH
+export enum Priority {
+  HIGH = "high",
+  MEDIUM = "medium",
+  LOW = "low"
 }
 
 export enum Frequency {

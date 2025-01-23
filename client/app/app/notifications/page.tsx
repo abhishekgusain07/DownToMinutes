@@ -21,21 +21,23 @@ const Notifications = () => {
     }, [fetchNotifications]);
 
     return (
-        <div className="min-h-screen min-w-screen flex flex-col items-center justify-center p-5">
-            <h1 className="text-3xl font-bold">Notifications</h1>
-            <div className="flex items-center justify-center mt-4">
+        <div className="container mx-auto px-4 py-8">
+            <h1 className="text-3xl font-bold mb-6">Notifications</h1>
+            <div className="bg-white shadow rounded-lg p-6">
                 {
                     loading ? (
                         <Loader2 className="animate-spin" />
                     ) : (
                         notifications && notifications.length > 0 ? (
-                            notifications.map((notification) => (
-                                <NotifcationBlock 
-                                    key={notification.id} 
-                                    notification={notification}
-                                    onMarkAsRead={fetchNotifications}
-                                />
-                            ))
+                            notifications.map((notification) =>  {
+                                return (
+                                        <NotifcationBlock 
+                                            key={notification.id} 
+                                            notification={notification}
+                                            onMarkAsRead={fetchNotifications}
+                                        />
+                                )
+                            })
                         ) : (
                             <h1 className="text-center">No notifications for now</h1>
                         )

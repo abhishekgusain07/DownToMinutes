@@ -41,7 +41,7 @@ const AllFriends = () => {
             participantUserId: userId!,
             currentUserId: friendUserId
         })
-        router.replace(`/friends/chat/${conversationId}`);
+        router.replace(`/app/friends/chat/${conversationId}`);
     }
     return (
         <div className="flex flex-col items-center justify-center">
