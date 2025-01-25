@@ -1,4 +1,4 @@
-import SubgoalForm from "@/app/app/goals/_componenet/subgoalform";
+import { SubgoalForm } from "../../../_componenet/subgoalform";
 
 const NewSubgoal = async ({ params }: {
     params: Promise<{
@@ -7,10 +7,10 @@ const NewSubgoal = async ({ params }: {
 }) => {
     const goalId = ((await params).id);
 
-    return (
+    return (        
         <div>
             <h1>Create New Subgoal for Goal {goalId}</h1>
-            <SubgoalForm goalId={goalId} />
+            <SubgoalForm goalId={goalId}/>
         </div>
     )
 }

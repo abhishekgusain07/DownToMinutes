@@ -7,16 +7,11 @@ import { getUser } from "../user/getUser"
 import { getGoal } from "../goals/getGoal"
 import { Frequency, Subgoal } from "@/utils/types"
 import { uid } from "uid"
+import {SubgoalFormValues } from "@/utils/zod/schemas"
+import { revalidatePath } from "next/cache"
 
-type CreateSubgoalInput = {
-    title: string
-    description?: string
-    frequency: Frequency
-    due_date: Date
-    goal_id: string
-}
 
-export const createSubgoal = async (subgoalData: CreateSubgoalInput): Promise<Subgoal> => {
+export const createSubgoal = async (subgoalData: SubgoalFormValues): Promise<Subgoal> => {
     const cookieStore = await cookies();
     const { userId } = await auth();
     
@@ -78,7 +73,7 @@ export const createSubgoal = async (subgoalData: CreateSubgoalInput): Promise<Su
             console.error("Error creating subgoal:", error);
             throw new Error("Error creating subgoal");
         }
-
+        revalidatePath(`/app/goals/${subgoalData.goal_id}`);
         return data as Subgoal;
     } catch (error) {
         console.error("Error in createSubgoal:", error);
