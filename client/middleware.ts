@@ -15,11 +15,7 @@ if (config.auth.enabled) {
 const isProtectedRoute = config.auth.enabled
   ? createRouteMatcher([
       "/dashboard(.*)",
-      "/goals(.*)",
-      "/friends(.*)",
-      "/logs(.*)",
-      "/notifications(.*)",
-      "/plans(.*)"
+      "/app(.*)"
     ])
   : () => false;
 

@@ -9,6 +9,7 @@ export const isAuthorized = async (
   userId: string
 ): Promise<{ authorized: boolean; message: string }> => {
  
+  
   if (!config?.payments?.enabled) {
     return {
       authorized: true,
