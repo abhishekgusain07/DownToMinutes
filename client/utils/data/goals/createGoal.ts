@@ -1,6 +1,6 @@
 "use server"
 
-import { Goal } from "@/utils/types"
+import { Goal, Priority, ProgressType } from "@/utils/types"
 import { auth } from "@clerk/nextjs/server"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
@@ -9,9 +9,11 @@ import { uid } from "uid"
 type CreateGoalInput = {
     title: string
     description?: string
-    priority: "LOW" | "MEDIUM" | "HIGH"
+    priority: Priority
     start_date: Date
     end_date: Date
+    progress_type: ProgressType
+    current_progress?: number
 }
 
 export const createGoal = async (goalData: CreateGoalInput): Promise<Goal | null> => {
@@ -60,11 +62,15 @@ export const createGoal = async (goalData: CreateGoalInput): Promise<Goal | null
                     priority: goalData.priority,
                     start_date: goalData.start_date,
                     end_date: goalData.end_date,
+                    progress_type: goalData.progress_type,
+                    current_progress: goalData.current_progress || 0,
                     user_id: userData.id,
                     active: true,
                     completed: false,
                     created_at: now,
-                    updated_at: now
+                    updated_at: now,
+                    isArchived: false,
+                    streak_count: 0
                 },
             ])
             .select()

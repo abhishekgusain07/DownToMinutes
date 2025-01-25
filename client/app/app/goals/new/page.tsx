@@ -5,14 +5,16 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createGoal } from "@/utils/data/goals/createGoal"
 import { toast } from "sonner"
-import { Goal } from "@/utils/types"
+import { Goal, Priority, ProgressType } from "@/utils/types"
 
 type FormData = {
     title: string
     description?: string
-    priority: "LOW" | "MEDIUM" | "HIGH"
+    priority: Priority
     start_date: string
     end_date: string
+    progress_type: ProgressType
+    current_progress?: number
 }
 
 const NewGoal = () => {
@@ -23,7 +25,14 @@ const NewGoal = () => {
         register,
         handleSubmit,
         formState: { errors },
-    } = useForm<FormData>()
+        watch,
+    } = useForm<FormData>({
+        defaultValues: {
+            priority: Priority.MEDIUM,
+            progress_type: ProgressType.TASK_BASED,
+            current_progress: 0
+        }
+    })
 
     const onSubmit = async (data: FormData) => {
         try {
@@ -32,8 +41,9 @@ const NewGoal = () => {
                 ...data,
                 start_date: new Date(data.start_date),
                 end_date: new Date(data.end_date),
+                current_progress: Number(data.current_progress) || 0
             })
-            router.push(`/goals/${goal?.id}`)
+            router.push(`/app/goals/${goal?.id}`)
             router.refresh()
             toast.success("Goal created successfully")
         } catch (error) {
@@ -84,6 +94,34 @@ const NewGoal = () => {
                 </div>
 
                 <div>
+                    <label className="block text-sm font-medium mb-1">Progress Type</label>
+                    <select
+                        {...register("progress_type")}
+                        className="w-full p-2 border rounded-md"
+                    >
+                        <option value="TASK_BASED">Task Based</option>
+                        <option value="TIME_BASED">Time Based</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium mb-1">Current Progress (%)</label>
+                    <input
+                        {...register("current_progress", {
+                            min: { value: 0, message: "Progress cannot be less than 0%" },
+                            max: { value: 100, message: "Progress cannot exceed 100%" },
+                            valueAsNumber: true
+                        })}
+                        type="number"
+                        className="w-full p-2 border rounded-md"
+                        placeholder="0"
+                    />
+                    {errors.current_progress && (
+                        <p className="text-red-500 text-sm mt-1">{errors.current_progress.message}</p>
+                    )}
+                </div>
+
+                <div>
                     <label className="block text-sm font-medium mb-1">Start Date</label>
                     <input
                         {...register("start_date", { required: "Start date is required" })}
@@ -110,7 +148,7 @@ const NewGoal = () => {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 disabled:opacity-50"
+                    className="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 disabled:bg-gray-400"
                 >
                     {loading ? "Creating..." : "Create Goal"}
                 </button>
