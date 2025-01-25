@@ -67,8 +67,34 @@ enum NotificationType {
   ACCOUNTABILITY_REMINDER
 }
 
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+}
+
+enum ProgressType {
+  TASK_BASED
+  TIME_BASED
+}
+
+enum MilestoneType {
+  COMPLETION_PERCENTAGE
+  TIME_BASED
+  TASK_COUNT
+  CUSTOM
+}
+
+enum NotificationUrgency {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
 model user {
-  id                Int       @id @default(autoincrement())
+  id                String    @id @default(cuid())
   created_time      DateTime  @default(now())
   email             String    @unique
   first_name        String?
@@ -77,6 +103,8 @@ model user {
   profile_image_url String?
   user_id           String    @unique
   subscription      String?
+  isDeleted         Boolean   @default(false)
+  deletedAt         DateTime?
   goals             goal[]
   subgoals         subgoal[]
   days             day[]
@@ -94,6 +122,12 @@ model user {
 
   sent_reports           AccountabilityReport[] @relation("SentReports")
   received_reports       AccountabilityReport[] @relation("ReceivedReports")
+
+  AccountabilityGroup AccountabilityGroup[]
+
+  AccountabilityGroupMember AccountabilityGroupMember[]
+
+  NotificationPreference NotificationPreference[]
 }
 
 model payments {
@@ -149,37 +183,79 @@ model invoices {
 }
 
 model goal {
-  id          String    @id 
-  title       String
-  description String?
-  created_at  DateTime  @default(now())
-  updated_at  DateTime  @updatedAt
-  priority    Priority  @default(MEDIUM)
-  active      Boolean   @default(true)
-  start_date  DateTime
-  end_date    DateTime
-  completed   Boolean   @default(false)
-  user        user      @relation(fields: [user_id], references: [id])
-  user_id     Int
-  subgoals    subgoal[]
-  notifications     Notification[]
+  id            String       @id @default(cuid())
+  title         String
+  description   String?
+  created_at    DateTime     @default(now())
+  updated_at    DateTime     @updatedAt
+  isArchived    Boolean      @default(false)
+  archivedAt    DateTime?
+  priority      Priority     @default(MEDIUM)
+  active        Boolean      @default(true)
+  start_date    DateTime
+  end_date      DateTime
+  completed     Boolean      @default(false)
+  progress_type ProgressType @default(TASK_BASED)
+  current_progress Float     @default(0) // 0-100 for percentage
+  streak_count    Int        @default(0)
+  last_activity   DateTime?
+  reflection      String?    // Weekly/monthly reflection on goal progress
+  milestones      Milestone[]
+  
+  // Relations
+  user_id       String
+  user          user         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  subgoals      subgoal[]
+  notifications Notification[] // Relation to notifications
+  @@index([user_id])
 }
 
 model subgoal {
-  id          String    @id 
+  id          String     @id @default(cuid())
   title       String
   description String?
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+  isArchived  Boolean    @default(false)
+  archivedAt  DateTime?
   frequency   Frequency
-  active      Boolean   @default(true)
   due_date    DateTime
-  completed   Boolean   @default(false)
-  created_at  DateTime  @default(now())
-  updated_at  DateTime  @updatedAt
-  goal        goal      @relation(fields: [goal_id], references: [id])
+  active      Boolean    @default(true)
+  completed   Boolean    @default(false)
+  streak_count    Int       @default(0)
+  last_activity   DateTime?
+  current_progress Float    @default(0)
+  reflection      String?   // Weekly reflection on subgoal progress
+  
+  // Relations
   goal_id     String
-  user        user      @relation(fields: [user_id], references: [id])
-  user_id     Int
-  notifications     Notification[]
+  goal        goal       @relation(fields: [goal_id], references: [id], onDelete: Cascade)
+  user_id     String
+  user        user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  tasks       task[]     // New relation to tasks
+  notifications Notification[] // Relation to notifications
+
+  @@index([goal_id])
+  @@index([user_id])
+}
+
+model task {
+  id              String     @id @default(cuid())
+  title           String
+  description     String?
+  status          TaskStatus @default(NOT_STARTED)
+  estimated_hours Float
+  actual_hours    Float      @default(0)
+  due_date        DateTime
+  created_at      DateTime   @default(now())
+  updated_at      DateTime   @updatedAt
+  notes           String?    // For tracking blockers or progress notes
+  
+  // Relations
+  subgoal_id      String
+  subgoal         subgoal    @relation(fields: [subgoal_id], references: [id])
+
+  @@index([subgoal_id])
 }
 
 model tag {
@@ -187,8 +263,8 @@ model tag {
   name        String
   color       String?    // Hex color code
   created_at  DateTime   @default(now())
-  user        user       @relation(fields: [user_id], references: [id])
-  user_id     Int
+  user        user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id     String
   activities  activity[]
 
   @@unique([name, user_id])
@@ -202,8 +278,10 @@ model activity {
   duration    Int             
   created_at  DateTime         @default(now())
   updated_at  DateTime         @updatedAt
-  user        user             @relation(fields: [user_id], references: [id])
-  user_id     Int
+  isArchived  Boolean          @default(false)
+  archivedAt  DateTime?
+  user        user             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id     String
   tags        tag[]
   entries     entry[]
 }
@@ -216,8 +294,8 @@ model day {
   energy_level    Int?      
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
-  user            user      @relation(fields: [user_id], references: [id])
-  user_id         Int
+  user            user      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id         String
   plans           Plan[]
   entries         entry[]
   plan_feedback   PlanFeedback[]
@@ -261,6 +339,7 @@ model Plan {
   day           day         @relation(fields: [day_id], references: [id])
   day_id        String
 }
+
 model PlanFeedback {
   id                String    @id @default(uuid())
   created_at        DateTime  @default(now())
@@ -276,26 +355,46 @@ model PlanFeedback {
   time_management   String?   // Time management analysis
   pattern_insights  String?   // Identified patterns and trends
 }
+
+model Milestone {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  type        MilestoneType
+  target_value Float        // e.g., 50 for 50% completion
+  achieved    Boolean       @default(false)
+  achieved_at DateTime?
+  created_at  DateTime      @default(now())
+  
+  // Relations
+  goal_id     String
+  goal        goal         @relation(fields: [goal_id], references: [id])
+  
+  @@index([goal_id])
+}
+
 model FriendRequest {
   id            String      @id @default(uuid())
   created_at    DateTime @default(now())
   status        FriendshipStatus   @default(PENDING) // PENDING, ACCEPTED, REJECTED
   
-  sender_id     Int
-  receiver_id   Int
+  sender_id     String
+  receiver_id   String
   
-  sender        user     @relation("SentFriendRequests", fields: [sender_id], references: [id])
-  receiver      user     @relation("ReceivedFriendRequests", fields: [receiver_id], references: [id])
+  sender        user     @relation("SentFriendRequests", fields: [sender_id], references: [id], onDelete: Cascade)
+  receiver      user     @relation("ReceivedFriendRequests", fields: [receiver_id], references: [id], onDelete: Cascade)
 
   @@unique([sender_id, receiver_id])
 } 
 
 model Friendship {
   id            String      @id @default(uuid())
-  created_at    DateTime @default(now())
+  created_at    DateTime    @default(now())
+  isDeleted     Boolean     @default(false)
+  deletedAt     DateTime?
   
-  user1_id      Int
-  user2_id      Int
+  user1_id      String
+  user2_id      String
   
   user1         user     @relation("FriendshipUser1", fields: [user1_id], references: [id])
   user2         user     @relation("FriendshipUser2", fields: [user2_id], references: [id])
@@ -314,8 +413,8 @@ model AccountabilitySettings {
   friendship_id String
   friendship    Friendship @relation(fields: [friendship_id], references: [id])
   
-  user_id       Int
-  user          user     @relation(fields: [user_id], references: [id])
+  user_id       String
+  user          user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   
   share_enabled Boolean   @default(false)
   frequency     String    @default("DAILY") // DAILY, WEEKLY
@@ -324,13 +423,45 @@ model AccountabilitySettings {
   @@unique([friendship_id, user_id])
 }
 
+model AccountabilityGroup {
+  id            String    @id @default(uuid())
+  name          String
+  description   String?
+  created_at    DateTime  @default(now())
+  isArchived    Boolean   @default(false)
+  archivedAt    DateTime?
+  
+  // Relations
+  creator_id    String
+  creator       user      @relation(fields: [creator_id], references: [id])
+  members       AccountabilityGroupMember[]
+  
+  @@index([creator_id])
+}
+
+model AccountabilityGroupMember {
+  id            String    @id @default(uuid())
+  joined_at     DateTime  @default(now())
+  role          String    @default("MEMBER") // ADMIN, MEMBER
+  
+  // Relations
+  group_id      String
+  group         AccountabilityGroup @relation(fields: [group_id], references: [id])
+  user_id       String
+  user          user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  @@unique([group_id, user_id])
+}
+
 model AccountabilityReport {
-  id            String      @id @default(uuid())
-  created_at    DateTime @default(now())
+  id             String    @id @default(uuid())
+  created_at     DateTime  @default(now())
+  isArchived     Boolean   @default(false)
+  archivedAt     DateTime?
   report_date   DateTime
   
-  sender_id     Int
-  receiver_id   Int
+  sender_id     String
+  receiver_id   String
   
   sender        user     @relation("SentReports", fields: [sender_id], references: [id])
   receiver      user     @relation("ReceivedReports", fields: [receiver_id], references: [id])
@@ -340,22 +471,49 @@ model AccountabilityReport {
   main_achievements   String
   challenges          String?
   plans_for_tomorrow  String?
+  mood            Mood?
+  energy_level    Int?      // 1-10 scale
+  feedback        String?   // Feedback from accountability partner
+  rating          Int?      // 1-5 rating from partner
   
   notifications     Notification[]
   
   @@unique([sender_id, receiver_id, report_date])
 }
 
+model NotificationPreference {
+  id              String    @id @default(uuid())
+  user_id         String
+  user            user      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  // Notification types and their settings
+  goal_updates    Boolean   @default(true)
+  milestones      Boolean   @default(true)
+  accountability  Boolean   @default(true)
+  reminders       Boolean   @default(true)
+  
+  // Time preferences
+  quiet_hours_start  DateTime?
+  quiet_hours_end    DateTime?
+  
+  @@unique([user_id])
+}
+
 model Notification {
   id              String           @id @default(uuid())
   createdAt       DateTime         @default(now())
+  isArchived      Boolean          @default(false)
+  archivedAt      DateTime?
   type            NotificationType
   title           String
   content         String
   isRead          Boolean          @default(false)
+  urgency         NotificationUrgency @default(LOW)
+  expires_at      DateTime?          // For time-sensitive notifications
+  action_taken    Boolean   @default(false)
   
   // Recipient user
-  userId          Int
+  userId          String
   user            user             @relation(fields: [userId], references: [id])
   
   // Optional relations based on notification type

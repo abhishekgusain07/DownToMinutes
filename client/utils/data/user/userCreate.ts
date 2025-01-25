@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { userCreateProps } from "@/utils/types";
-
+import { uid } from "uid";
 export const userCreate = async ({
   email,
   first_name,
@@ -30,6 +30,7 @@ export const userCreate = async ({
       .from("user")
       .insert([
         {
+          id: uid(32),
           email,
           first_name,
           last_name,

@@ -48,44 +48,132 @@ const userUpdateSchema = z.object({
 });
 
 export enum Priority {
-  HIGH = "high",
-  MEDIUM = "medium",
-  LOW = "low"
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH'
+}
+
+export enum TaskStatus {
+  NOT_STARTED = 'NOT_STARTED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  BLOCKED = 'BLOCKED'
+}
+
+export enum ProgressType {
+  TASK_BASED = 'TASK_BASED',
+  TIME_BASED = 'TIME_BASED'
 }
 
 export enum Frequency {
-  WEEKLY = "WEEKLY",
-  MONTHLY = "MONTHLY",
-  QUARTERLY = "QUARTERLY",
-  YEARLY = "YEARLY"
+  WEEKLY = 'WEEKLY',
+  MONTHLY = 'MONTHLY',
+  QUARTERLY = 'QUARTERLY',
+  YEARLY = 'YEARLY'
 }
 
-export interface Goal {
-  id: number;
+export interface Task {
+  id: string;
   title: string;
   description?: string;
+  status: TaskStatus;
+  estimated_hours: number;
+  actual_hours: number;
+  due_date: Date;
   created_at: Date;
   updated_at: Date;
-  priority: Priority
-  active: boolean;
-  start_date: Date;
-  end_date: Date;
-  completed: boolean;
-  user_id: number;
-  subgoals?: Subgoal[];
+  notes?: string;
+  subgoal_id: string;
 }
 
 export interface Subgoal {
-  id: number;
+  id: string;
   title: string;
   description?: string;
   frequency: Frequency;
   due_date: Date;
-  completed: boolean;
   created_at: Date;
   updated_at: Date;
-  goal_id: number;
-  user_id: number;
+  active: boolean;
+  completed: boolean;
+  goal_id: string;
+  user_id: string;
+  tasks: Task[];
+  
+  // Computed fields
+  progress: number;        // Calculated from tasks completion (0-100)
+  total_estimated_hours: number;  // Sum of all tasks' estimated hours
+  total_actual_hours: number;     // Sum of all tasks' actual hours
+  completion_rate?: number;       // actual_hours / estimated_hours
+}
+
+export interface Goal {
+  id: string;
+  title: string;
+  description?: string;
+  created_at: Date;
+  updated_at: Date;
+  priority: Priority;
+  active: boolean;
+  start_date: Date;
+  end_date: Date;
+  completed: boolean;
+  user_id: string;
+  progress_type: ProgressType;
+  subgoals: Subgoal[];
+  
+  // Computed fields
+  overall_progress: number;       // Average progress of all subgoals (0-100)
+  total_estimated_hours: number;  // Sum of all subgoals' estimated hours
+  total_actual_hours: number;     // Sum of all subgoals' actual hours
+  completion_rate?: number;       // actual_hours / estimated_hours
+}
+
+// Input types for creating/updating
+export interface CreateTaskInput {
+  title: string;
+  description?: string;
+  estimated_hours: number;
+  due_date: Date;
+  notes?: string;
+  subgoal_id: string;
+}
+
+export interface UpdateTaskInput extends Partial<CreateTaskInput> {
+  id: string;
+  status?: TaskStatus;
+  actual_hours?: number;
+}
+
+export interface CreateSubgoalInput {
+  title: string;
+  description?: string;
+  frequency: Frequency;
+  due_date: Date;
+  goal_id: string;
+  tasks?: CreateTaskInput[];
+}
+
+export interface UpdateSubgoalInput extends Partial<CreateSubgoalInput> {
+  id: string;
+  active?: boolean;
+  completed?: boolean;
+}
+
+export interface CreateGoalInput {
+  title: string;
+  description?: string;
+  priority: Priority;
+  start_date: Date;
+  end_date: Date;
+  progress_type: ProgressType;
+  subgoals?: CreateSubgoalInput[];
+}
+
+export interface UpdateGoalInput extends Partial<CreateGoalInput> {
+  id: string;
+  active?: boolean;
+  completed?: boolean;
 }
 
 export enum FriendshipStatus {
@@ -98,8 +186,8 @@ export type FriendRequest = {
   id: string
   created_at : Date
   status: FriendshipStatus
-  sender_id: number
-  receiver_id: number
+  sender_id: string
+  receiver_id: string
   sender: User
   receiver: User
 }
@@ -107,8 +195,8 @@ export type FriendRequest = {
 export interface FriendRequestWithUser {
   id: string
   created_at: Date
-  sender_id: number
-  receiver_id: number
+  sender_id: string
+  receiver_id: string
   senderData: User | null
   receiverData ?: User | null
 }
@@ -116,11 +204,14 @@ export interface FriendRequestWithUser {
 export type Friendship = {
   id: string
   created_at: Date
-  user1_id: number
-  user2_id: number
+  isDeleted: boolean
+  deletedAt: Date | null
+  user1_id: string
+  user2_id: string
   user1: User
   user2: User
-  accountability_settings?: AccountabilitySettings
+  accountability_settings?: AccountabilitySettings[]
+  notifications?: Notification[]
 }
 
 export type AccountabilitySettings = {
@@ -138,8 +229,10 @@ export type AccountabilityReport = {
   id: string
   created_at: Date
   report_date: Date
-  sender_id: number
-  receiver_id: number
+  isArchived: boolean
+  archivedAt: Date | null
+  sender_id: string
+  receiver_id: string
   sender: User
   receiver: User
   activities_completed: number
@@ -148,7 +241,7 @@ export type AccountabilityReport = {
 }
 
 export type User = {
-  id: number
+  id: string
   created_time: Date
   email: string
   first_name: string | null
@@ -157,6 +250,8 @@ export type User = {
   profile_image_url: string | null
   user_id: string
   subscription: string | null
+  isDeleted: boolean
+  deletedAt: Date | null
   goals?: Goal[]
   subgoals?: Subgoal[]
   days?: Day[]
@@ -212,7 +307,7 @@ export interface Entry {
 }
 
 export interface FilteredUsers {
-  id: number;
+  id: string;
   email: string;
   first_name: string | null;
   last_name: string | null;
@@ -236,7 +331,7 @@ export type Day = {
   energy_level?: number
   created_at: Date
   updated_at: Date
-  user_id: number
+  user_id: string
   entries: Entry[]
   total_focus_time?: number
   distractions: string[]
@@ -251,7 +346,9 @@ export type Activity = {
   duration: number
   created_at: Date
   updated_at: Date
-  user_id: number
+  isArchived: boolean
+  archivedAt: Date | null
+  user_id: string
   tags: Tag[]
   entries: Entry[]
 }
@@ -261,7 +358,7 @@ export type Tag = {
   name: string
   color?: string
   created_at: Date
-  user_id: number
+  user_id: string
   activities: Activity[]
 }
 
@@ -288,13 +385,15 @@ export enum NotificationType {
 export interface Notification {
   id: string;
   createdAt: Date;
+  isArchived: boolean
+  archivedAt: Date | null
   type: NotificationType;
   title: string;
   content: string;
   isRead: boolean;
   
   // Recipient user
-  userId: number;
+  userId: string;
   user?: User;
   
   // Optional relations based on notification type
@@ -355,4 +454,50 @@ export interface PlanFeedback {
   goal_alignment?: string;
   time_management?: string;
   pattern_insights?: string;
+}
+
+export enum MilestoneType {
+  COMPLETION_PERCENTAGE = "COMPLETION_PERCENTAGE",
+  TIME_BASED = "TIME_BASED",
+  TASK_COUNT = "TASK_COUNT",
+  CUSTOM = "CUSTOM"
+}
+
+export enum NotificationUrgency {
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
+  CRITICAL = "CRITICAL"
+}
+
+export interface AccountabilityGroup {
+  id: string;
+  name: string;
+  description?: string;
+  created_at: Date;
+  isArchived: boolean
+  archivedAt: Date | null
+  creator_id: string;
+  creator: User;
+  members: AccountabilityGroupMember[];
+}
+
+export interface AccountabilityGroupMember {
+  id: string;
+  group_id: string;
+  user_id: string;
+  joined_at: Date;
+  group: AccountabilityGroup;
+  user: User;
+}
+
+export interface NotificationPreference {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  urgency: NotificationUrgency;
+  enabled: boolean;
+  created_at: Date;
+  updated_at: Date;
+  user: User;
 }

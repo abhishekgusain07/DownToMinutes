@@ -4,7 +4,7 @@ import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
 import { User } from "@/utils/types";
 
-export const getUserByIntId = async (userId: number): Promise<User | null> => {
+export const getUserById = async (userId: string): Promise<User | null> => {
     const cookieStore = await cookies();
 
     const supabase = createServerClient(
