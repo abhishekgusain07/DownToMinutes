@@ -4,11 +4,12 @@ import { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { getUser } from "@/utils/data/user/getUser";
 import { useUserInfoStore } from "@/store/useUserInfoStore";
+import { User, useSupabaseClient } from "@supabase/auth-helpers-react";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
     const { user } = useUser(); // Get user info from Clerk
     const setUserInfo = useUserInfoStore((state) => state.setUserInfo);
-
+    const supabaseClient = useSupabaseClient();
     useEffect(() => {
         const fetchAndSetUserId = async () => {
             if (user) {
@@ -26,7 +27,6 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
                 }
             }
         };
-
         fetchAndSetUserId();
     }, [user, setUserInfo]); 
     return(

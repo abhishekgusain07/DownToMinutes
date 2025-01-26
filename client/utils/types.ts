@@ -494,10 +494,12 @@ export interface AccountabilityGroupMember {
 export interface NotificationPreference {
   id: string;
   user_id: string;
-  type: NotificationType;
-  urgency: NotificationUrgency;
-  enabled: boolean;
+  goal_updates: boolean;
+  milestones: boolean;
+  accountability: boolean;
+  reminders: boolean;
+  quiet_hours_start: Date | null;
+  quiet_hours_end: Date | null;
   created_at: Date;
   updated_at: Date;
-  user: User;
 }

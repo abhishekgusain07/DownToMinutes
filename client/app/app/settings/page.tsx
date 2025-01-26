@@ -8,14 +8,12 @@ import { SettingsTabIcons, SettingsTabs } from "@/components/settings/SettingsTa
 
 
 type TabNamesKeys = keyof typeof SettingsTabs;
-const TabNames = Object.keys(SettingsTabs);
+const TabNames = Object.keys(SettingsTabs) as (keyof typeof SettingsTabs)[];
 
 const SettingsPage = () => {
-  const [activeTab, setActiveTab] = useState<TabNamesKeys>(
-    TabNames[0] as TabNamesKeys
-  );
+  const [activeTab, setActiveTab] = useState(TabNames[0]);
 
-  const CurrentTab = SettingsTabs[activeTab] as React.ComponentType;
+  const CurrentTab = SettingsTabs[activeTab];
 
   return (
     <div className="h-screen w-screen items-center justify-center">
@@ -24,7 +22,7 @@ const SettingsPage = () => {
           subHeading="Fine-tune your chatbot's behavior, appearance, and functionality"
         />
         <div className="flex flex-col gap-4 p-4 max-w-7xl lg:mx-auto lg:grid lg:grid-cols-12">
-          <SidebarNav
+        <SidebarNav
             className="col-span-2"
             items={TabNames.map((x: any) => {
               return {
