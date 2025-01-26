@@ -1,0 +1,5 @@
+<svg width="20" height="20" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <circle class="help_svg__stroke help_svg__circle" cx="12" cy="12" r="9.65" stroke="#1A1A1A" stroke-width="1.7"></circle>
+  <path class="help_svg__stroke help_svg__negative" d="M9.664 8.576a2.41 2.41 0 114.102 2.39l-1.075 1.104c-.326.322-.765.76-.765 1.544v.364" stroke="#1A1A1A" stroke-width="1.7" stroke-linecap="round"></path>
+  <circle class="help_svg__fill help_svg__negative" cx="11.927" cy="16.884" r="0.884" fill="#1A1A1A"></circle>
+</svg>

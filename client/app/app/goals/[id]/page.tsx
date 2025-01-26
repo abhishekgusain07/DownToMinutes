@@ -2,14 +2,14 @@ import { Frequency, Goal as GoalType, Subgoal } from "@/utils/types";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus } from "lucide-react";
+import { ChevronRightCircle, HomeIcon, Plus } from "lucide-react";
 import { getGoal } from "@/utils/data/goals/getGoal";
 import { getSubgoalsOfGoals } from "@/utils/data/subgoals/getSubgoalsOfGoals";
 import { auth } from "@clerk/nextjs/server";
 import { SubgoalCard } from "../_components/SubgoalCard";
-import { useSubgoalNavigation } from "../_components/routeToSubgoal";
 import SubgoalsDisplay from "../_components/subgoalSection";
-
+import PageHeaders from "../../_componenets/PageHeaders";
+  
 const Goal = async({ params }: 
     {
         params: Promise<{ id: string }>
@@ -53,7 +53,16 @@ const Goal = async({ params }:
                     </Button>
                 </Link>
             </div>
-
+            <PageHeaders>
+                <div className="mt-3 flex gap-1 justify-start items-center">
+                    <Link href="/app/goals">
+                        <Button variant="ghost">
+                            <HomeIcon className="mr-2 h-4 w-4" />
+                            Home
+                        </Button>
+                    </Link>
+                </div>
+            </PageHeaders>
             <Tabs defaultValue="all" className="w-full">
                 <TabsList className="grid w-fit" style={{ gridTemplateColumns: `repeat(${Object.keys(Frequency).length + 1}, minmax(0, 1fr))` }}>
                     <TabsTrigger value="all">All Subgoals</TabsTrigger>

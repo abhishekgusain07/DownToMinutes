@@ -45,8 +45,6 @@ import { useState } from "react";
 import { taskFormSchema, TaskFormValues } from "@/utils/zod/schemas";
 import { createTask } from "@/utils/data/task/createTask";
 
-
-
 interface CreateTaskDialogProps {
   subgoalId: string;
   goalId: string;
@@ -55,7 +53,7 @@ interface CreateTaskDialogProps {
 
 export function CreateTaskDialog({ subgoalId, goalId, onTaskCreated }: CreateTaskDialogProps) {
   const [open, setOpen] = useState(false);
-  
+
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -181,49 +179,29 @@ export function CreateTaskDialog({ subgoalId, goalId, onTaskCreated }: CreateTas
               )}
             />
             <FormField
-          control={form.control}
-          name="due_date"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Due Date</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
+              control={form.control}
+              name="due_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Due Date</FormLabel>
                   <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-[240px] pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
+                    <Input
+                      type="date"
+                      {...field}
+                      value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
+                      onChange={(e) => {
+                        const date = new Date(e.target.value);
+                        field.onChange(date);
+                      }}
+                    />
                   </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) =>
-                      date < new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormDescription>
-                When do you want to complete this subtask?
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                  <FormDescription>
+                    When does this task need to be completed?
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="notes"

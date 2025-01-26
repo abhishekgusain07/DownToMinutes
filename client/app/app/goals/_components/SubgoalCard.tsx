@@ -2,6 +2,7 @@
 
 import { Subgoal } from "@/utils/types";
 import { useSubgoalNavigation } from "./routeToSubgoal";
+import { Check } from "lucide-react";
 
 interface SubgoalCardProps {
   subgoal: Subgoal;
@@ -21,6 +22,11 @@ export function SubgoalCard({ subgoal, goalId }: SubgoalCardProps) {
       <div className="mt-2">
         <p className="text-xs text-muted-foreground">
           Due: {new Date(subgoal.due_date).toLocaleDateString()}
+        </p>
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground">
+          status: on Track <Check className="h-4 w-4  text-green-500" />
         </p>
       </div>
     </div>
