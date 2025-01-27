@@ -17,8 +17,7 @@ export default async function ChatLayout({ children }: {
     userId: userId!
   })
 
-  // preloaded chat
-
+  
   return (
     <ChatLayoutWrapper
       preLoadedUserInfo={preloadedUserInfo}

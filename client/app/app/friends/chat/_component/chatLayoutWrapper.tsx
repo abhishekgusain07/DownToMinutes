@@ -36,8 +36,9 @@ const ChatLayoutWrapper = (
         return () => clearTimeout(timer);
     },[])
 
-    //TODO: better handle !isSignedIn exception
     const isLoading = !isLoaded || !isSignedIn || loading || userInfo == null || conversations == null;
+
+    
 
     if(isLoading) {
         return <LoadingScreen />

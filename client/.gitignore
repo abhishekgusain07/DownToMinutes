@@ -19,6 +19,10 @@
 .DS_Store
 *.pem
 
+
+#mvp
+/mvp.txt
+
 # debug
 npm-debug.log*
 yarn-debug.log*

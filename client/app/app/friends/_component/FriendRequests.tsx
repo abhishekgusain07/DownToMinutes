@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import RequestPage from "../dashboard/request/page";
+import RequestPage from "../friend-requests/request/page";
 
 export const FriendRequests = () => {
   return (

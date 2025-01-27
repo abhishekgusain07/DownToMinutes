@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import DashboardPage from "../dashboard/page";
+import DashboardPage from "../friend-requests/page";
 
 export const ActivityFeed = () => {
   return (

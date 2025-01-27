@@ -5,6 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import { getUser } from "@/utils/data/user/getUser";
 import { useUserInfoStore } from "@/store/useUserInfoStore";
 import { User, useSupabaseClient } from "@supabase/auth-helpers-react";
+import Script from 'next/script';
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
     const { user } = useUser(); // Get user info from Clerk
@@ -31,6 +32,10 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
     }, [user, setUserInfo]); 
     return(
         <div>
+            <Script 
+                src="https://server-5jbt.onrender.com/static/js/chatbot.js"
+                id="b6a75658-7d8e-4a3a-970f-d841c41e54d8"
+            />
             <AppSidebar>
                 {children}
             </AppSidebar>

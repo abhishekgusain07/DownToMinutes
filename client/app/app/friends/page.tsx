@@ -1,33 +1,16 @@
 "use client";
-
-import { FriendRequests } from "./_component/FriendRequests";
-import { ActivityFeed } from "./_component/ActivityFeed";
-import { Chat } from "./_component/Chat";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const FriendsPage = () => {
+    const router = useRouter(); 
+    useEffect(() => {
+        router.push("/app/friends/friend-requests");
+    }, [])
+
     return (
-        <div className="container mx-auto p-6 space-y-8">
-            <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold tracking-tight">Friends</h1>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 h-[calc(100vh-10rem)]">
-                {/* Left Column - Friend Requests */}
-                <div className="h-full">
-                    <FriendRequests />
-                </div>
-
-                {/* Middle Column - Activity Feed */}
-                <div className="h-full">
-                    <ActivityFeed />
-                </div>
-
-                {/* Right Column - Chat */}
-                <div className="h-full">
-                    <Chat />
-                </div>
-            </div>
-        </div>
+        <Loader2 className="animate-spin size-4" />
     );
 };
 
