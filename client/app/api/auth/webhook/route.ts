@@ -68,6 +68,7 @@ export async function POST(req: Request) {
           profile_image_url: payload?.data?.profile_image_url,
           user_id: payload?.data?.id,
         });
+        console.log("user info inserted in supabase")
         const userData = {
           userId: payload?.data?.id,
           email: payload?.data?.email_addresses?.[0]?.email_address,

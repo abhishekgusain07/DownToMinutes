@@ -26,11 +26,12 @@ export const userCreate = async ({
   );
 
   try {
+    const userId = uid(32);
     const { data, error } = await supabase
       .from("user")
       .insert([
         {
-          id: uid(32),
+          id: userId,
           email,
           first_name,
           last_name,
@@ -39,7 +40,11 @@ export const userCreate = async ({
         },
       ])
       .select();
-
+      await supabase.from("NotificationPreference")
+      .insert({
+        id: uid(32),
+        user_id: userId,
+      });
     console.log("data", data);
     console.log("error", error);
 
