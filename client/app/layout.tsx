@@ -21,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <AuthWrapper>
-      <html lang="en" suppressHydrationWarning className="dark">
+      <html lang="en" suppressHydrationWarning>
         <head>
           <link
             rel="preload"

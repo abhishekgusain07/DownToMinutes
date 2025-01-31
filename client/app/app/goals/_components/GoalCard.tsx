@@ -5,15 +5,25 @@ import { Goal, Priority } from "@/utils/types";
 import { MoreVertical } from "lucide-react";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
+import { useEffect, useState } from "react";
 
 interface GoalCardProps {
   goal: Goal;
 }
 
 const calculateProgress = (goal: Goal) => {
+  console.log("subgoals length -> ", goal.subgoals?.length)
   if (!goal.subgoals || goal.subgoals.length === 0) return 0;
+  
   const completedSubgoals = goal.subgoals.filter(subgoal => subgoal.completed).length;
-  return Math.round((completedSubgoals / goal.subgoals.length) * 100);
+  const totalSubgoals = goal.subgoals.length;
+  
+  // Ensure we're not dividing by zero and calculate percentage
+  const progressPercentage = totalSubgoals > 0 
+    ? Math.round((completedSubgoals / totalSubgoals) * 100) 
+    : 0;
+    
+  return progressPercentage;
 };
 
 const getPriorityColor = (priority: Priority) => {
@@ -40,7 +50,13 @@ const getStatusText = (progress: number, dueDate: Date) => {
 };
 
 export function GoalCard({ goal }: GoalCardProps) {
-  const progress = calculateProgress(goal);
+  const [progress, setProgress] = useState<number>(0)
+  
+  useEffect(() => {
+    const calculatedProgress = calculateProgress(goal);
+    setProgress(calculatedProgress);
+  }, [goal])
+
   const priorityColor = getPriorityColor(goal.priority);
   const status = getStatusText(progress, goal.end_date);
   

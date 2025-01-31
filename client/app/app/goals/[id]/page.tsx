@@ -9,7 +9,14 @@ import { auth } from "@clerk/nextjs/server";
 import { SubgoalCard } from "../_components/SubgoalCard";
 import SubgoalsDisplay from "../_components/subgoalSection";
 import PageHeaders from "../../_componenets/PageHeaders";
-  
+import { ActivityCalendar } from 'react-activity-calendar'
+const data = [
+    {
+      date: '2024-06-23',
+      count: 2,
+      level: 1
+    }
+  ]
 const Goal = async({ params }: 
     {
         params: Promise<{ id: string }>
@@ -52,6 +59,9 @@ const Goal = async({ params }:
                         Add Subgoal
                     </Button>
                 </Link>
+            </div>
+            <div>
+                <ActivityCalendar data={data}/>
             </div>
             <PageHeaders>
                 <div className="mt-3 flex gap-1 justify-start items-center">
