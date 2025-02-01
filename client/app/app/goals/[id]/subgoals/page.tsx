@@ -2,21 +2,15 @@ import { Frequency, Goal as GoalType, Subgoal } from "@/utils/types";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ChevronRightCircle, HomeIcon, Plus } from "lucide-react";
+import { HomeIcon, Plus } from "lucide-react";
 import { getGoal } from "@/utils/data/goals/getGoal";
 import { getSubgoalsOfGoals } from "@/utils/data/subgoals/getSubgoalsOfGoals";
 import { auth } from "@clerk/nextjs/server";
-import { ActivityCalendar } from 'react-activity-calendar'
 import PageHeaders from "@/app/app/_componenets/PageHeaders";
 import { SubgoalCard } from "../../_components/SubgoalCard";
 import SubgoalsDisplay from "../../_components/subgoalSection";
-const data = [
-    {
-      date: '2024-06-23',
-      count: 2,
-      level: 1
-    }
-  ]
+import { CreateNewSubGoalDialog } from "../../_components/CreateNewSubGoalDialog";
+
 const Goal = async({ params }: 
     {
         params: Promise<{ id: string }>
@@ -53,15 +47,7 @@ const Goal = async({ params }:
                     <h1 className="text-2xl font-bold">{goal.title}</h1>
                     <p className="text-muted-foreground">{goal.description}</p>
                 </div>
-                <Link href={`/app/goals/${goalId}/subgoals/new`}>
-                    <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Subgoal
-                    </Button>
-                </Link>
-            </div>
-            <div>
-                <ActivityCalendar data={data}/>
+                <CreateNewSubGoalDialog goalId={goalId} />
             </div>
             <PageHeaders>
                 <div className="mt-3 flex gap-1 justify-start items-center">

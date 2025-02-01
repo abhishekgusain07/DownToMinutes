@@ -9,6 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CreateTaskDialog } from "../../../_components/CreateTaskDialog";
+import CreateNewTaskDialog from "../../../_components/CreateNewTaskDIalog";
 
 interface AllTasksOfGoalProps {
     goalId: string;
@@ -20,7 +23,7 @@ const AllTasksOfGoal = ({ goalId }: AllTasksOfGoalProps) => {
     const [loading, setLoading] = useState(true);
     const [selectedSubgoalId, setSelectedSubgoalId] = useState<string>("all");
     const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
-
+    
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -65,6 +68,16 @@ const AllTasksOfGoal = ({ goalId }: AllTasksOfGoalProps) => {
         }
     };
 
+    const fetchTasks = async () => {
+        try {
+            const tasksData = await getTaskOfGoal({ goalId });
+            setTasks(tasksData || []);
+            setFilteredTasks(tasksData || []);
+        } catch (error) {
+            console.error("Error fetching tasks:", error);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-full">
@@ -75,8 +88,8 @@ const AllTasksOfGoal = ({ goalId }: AllTasksOfGoalProps) => {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col justify-center gap-1 items-start">
-                <p className="text-md font-semibold">Select a Subgoal</p>
+            <div className="flex justify-between  items-center">
+
                 <Select
                     value={selectedSubgoalId}
                     onValueChange={setSelectedSubgoalId}
@@ -93,6 +106,7 @@ const AllTasksOfGoal = ({ goalId }: AllTasksOfGoalProps) => {
                         ))}
                     </SelectContent>
                 </Select>
+                <CreateNewTaskDialog goalId={goalId} subgoals={subgoals} onTaskCreated={fetchTasks} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
