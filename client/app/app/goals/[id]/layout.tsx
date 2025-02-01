@@ -2,7 +2,8 @@
 import { useState } from "react";
 
 import { usePathname, useRouter } from "next/navigation";
-import GoalTabsLayout from "./_component/GoalTabsLayout";
+import GoalTabsLayout from "../../goalv2/_component/GoalTabsLayout";
+import { Loader2 } from "lucide-react";
 
 type TabName = "subgoals" | "tasks" | "progress" | "activity";
 
@@ -16,6 +17,8 @@ const tabNameToUrlMap: Record<TabName, string> = {
 const Layout = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const pathname = usePathname();
+    const goalId = pathname.split('/').slice(-2)[0];
+    const [isHandlingTabChange, setIsHandlingTabChange] = useState<boolean>(false);
     const tabs = ["subgoals", "tasks", "progress", "activity"] as const;
     
     const [activeTab, setActiveTab] = useState<TabName>(() => {
@@ -24,12 +27,22 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     });
 
     const handleTabChange = (tab: TabName) => {
+        if (isHandlingTabChange) return;
+        setIsHandlingTabChange(true);
         setActiveTab(tab);
-        router.push(`/app/goalv2/${tabNameToUrlMap[tab]}`);
+        router.push(`/app/goals/${goalId}/${tabNameToUrlMap[tab]}`);
+        setIsHandlingTabChange(false);
     };
-      
+    if (isHandlingTabChange) {
+        return  (
+            <div className="h-full w-full flex justify-center items-center transition duration-500 ease-in-out">
+                <Loader2 className="animate-spin size-4" />
+            </div>
+        )
+    }
     return (
         <div className="flex flex-col h-full w-full">
+            {/*TODO:  <GoalTitleHeader /> */}
             <div className="flex flex-col my-6 px-3 py-8 w-full h-full">
                 <div className="flex px-3 overflow-x-auto border-b border-zinc-300 lg:justify-center">
                     <GoalTabsLayout 

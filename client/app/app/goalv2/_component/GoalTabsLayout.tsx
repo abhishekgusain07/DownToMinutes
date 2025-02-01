@@ -1,4 +1,4 @@
-type TabName = "Subgoals" | "Tasks" | "Progress";
+type TabName = "subgoals" | "tasks" | "progress" | "activity";
 
 const GoalTabsLayout = ({
      tabs,
@@ -38,7 +38,7 @@ const GoalTabsLayout = ({
             >
             {tab}
             </div>
-            {tab === "Progress" && activeTab!=="Progress" && 1 > 0 && (
+            {tab === "progress" && activeTab!=="progress" && 1 > 0 && (
             <div className="absolute top-2 right-1 inline-block px-1 py-1 text-xs font-small leading-none text-white bg-red-600 rounded-full">
             </div>
             )}

@@ -5,12 +5,13 @@ import { createServerClient } from "@supabase/ssr";
 import { Goal, Subgoal, User } from "@/utils/types";
 import { getUser } from "../user/getUser";
 import { getGoal } from "../goals/getGoal";
+import { auth } from "@clerk/nextjs/server";
 
 export const getSubgoalsOfGoals = async ({
     userId,
     goalId
 }: {
-    userId: string;
+    userId ?: string;
     goalId: string;
 }): Promise<Subgoal[] | null> => {
     const cookieStore = await cookies();
@@ -28,9 +29,9 @@ export const getSubgoalsOfGoals = async ({
     );
 
     try {
-
+        const {userId:clerkUserId} = await auth();
         //check if goal and user exist independently
-        const userData: User | null = await getUser(userId);
+        const userData: User | null = await getUser(clerkUserId!);
 
         const goalData: Goal | null = await getGoal(goalId);
 
@@ -51,7 +52,7 @@ export const getSubgoalsOfGoals = async ({
             .eq("goal_id", goalId)
             .order('created_at', { ascending: false });
 
-        if (error?.code) return null;
+        if (error?.code) return [];
         return data;
     } catch (error: any) {
         throw new Error(error.message);

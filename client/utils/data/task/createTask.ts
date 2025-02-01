@@ -69,8 +69,11 @@ export const createTask = async (data: TaskFormValues & {subgoal_id: string} & {
         updated_at: new Date(),
         notes: data.notes,
         subgoal_id: data.subgoal_id,
+        goal_id: data.goal_id,
       },
     ])
+    .select()
+    .single();
     if (error) {
       throw new Error("Error while creating task ", error);
     }

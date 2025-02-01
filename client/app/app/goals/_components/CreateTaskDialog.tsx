@@ -90,7 +90,7 @@ export function CreateTaskDialog({ subgoalId, goalId, onTaskCreated }: CreateTas
       <DialogTrigger asChild>
         <Button>Create Task</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px] w-[90vw] max-h-[90vh] overflow-y-auto fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-lg">
         <DialogHeader>
           <DialogTitle>Create New Task</DialogTitle>
           <DialogDescription>
