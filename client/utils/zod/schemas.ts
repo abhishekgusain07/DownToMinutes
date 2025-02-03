@@ -20,7 +20,7 @@ export const subgoalFormSchema = z.object({
       .string()
       .max(500, { message: "Description must not exceed 500 characters" })
       .optional(),
-    frequency: z.enum(["WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY"], {
+    frequency: z.enum(["WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY", "ONE_TIME"], {
       required_error: "Please select a frequency",
     }),
     due_date: z.date({

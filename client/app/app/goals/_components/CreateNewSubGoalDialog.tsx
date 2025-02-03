@@ -152,6 +152,7 @@ export function CreateNewSubGoalDialog({ goalId, onSubgoalCreated }: CreateSubgo
                       <SelectItem value="MONTHLY">Monthly</SelectItem>
                       <SelectItem value="QUARTERLY">Quarterly</SelectItem>
                       <SelectItem value="YEARLY">Yearly</SelectItem>
+                      <SelectItem value="ONE_TIME">One Time</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormDescription>

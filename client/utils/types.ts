@@ -69,7 +69,9 @@ export enum Frequency {
   WEEKLY = 'WEEKLY',
   MONTHLY = 'MONTHLY',
   QUARTERLY = 'QUARTERLY',
-  YEARLY = 'YEARLY'
+  YEARLY = 'YEARLY',
+  ONE_TIME = 'ONE_TIME'
+
 }
 
 export interface Task {

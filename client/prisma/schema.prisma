@@ -25,6 +25,7 @@ enum Frequency {
   MONTHLY
   QUARTERLY
   YEARLY
+  ONE_TIME
 }
 
 enum ActivityCategory {
@@ -257,7 +258,7 @@ model task {
   goal_id         String
   subgoal         subgoal    @relation(fields: [subgoal_id], references: [id])
   goal           goal       @relation(fields: [goal_id], references: [id], onDelete: Cascade)
-
+  Action Action[]
   @@index([subgoal_id])
 }
 
@@ -299,15 +300,22 @@ model day {
   updated_at      DateTime  @updatedAt
   user            user      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id         String
-  plans           Plan[]
+  actions         Action[]
   entries         entry[]
   plan_feedback   PlanFeedback[]
   total_focus_time Int?     
   distractions    String[]  
   highlights      String[]  
   notifications     Notification[]
+  daily_reflection DailyReflection? 
 }
-
+model DailyReflection {
+  id            String @id @default(uuid())
+  mood          Mood?
+  distractions  String[] // Free-text (e.g., "Social media")
+  day           day     @relation(fields: [day_id], references: [id])
+  day_id        String @unique
+}
 model entry {
   id             String           @id
   start_time     DateTime
@@ -327,20 +335,18 @@ model entry {
   activity_id    String?
 }
 
-model Plan {
-  id            String      @id @default(uuid())
-  task          String
-  description   String?
-  from_time     String
-  to_time       String
-  status        PlanStatus  @default(NOT_STARTED)
-  effectiveness Int         @default(5)
-  distractions  Int         @default(5)
-  note          String?
-  created_at    DateTime    @default(now())
-  updated_at    DateTime    @updatedAt
-  day           day         @relation(fields: [day_id], references: [id])
-  day_id        String
+model Action {
+  id           String    @id @default(uuid())
+  title        String    // e.g., "Study React Hooks for 1h"
+  duration     Int       // Minutes (e.g., 60) **critical for progress**
+  completed    Boolean   @default(false) // Simpler than statuses
+  task         task      @relation(fields: [task_id], references: [id])
+  task_id      String    // **Mandatory**: Every action ties to a task!
+  day          day       @relation(fields: [day_id], references: [id])
+  day_id       String
+  notes        String?   // For blockers or reflections
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
 }
 
 model PlanFeedback {
