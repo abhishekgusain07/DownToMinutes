@@ -20,9 +20,9 @@ import { Loader2 } from 'lucide-react';
 import { actionFormSchema } from '@/utils/zod/schemas';
 import { createPlan } from '@/utils/data/plans/createPlan';
 import { useRouter } from 'next/navigation';
-import { generatePlans } from '@/utils/ai/generatePlans';
 import ShowSuggestAiPlans from './showSuggestAiPlans';
 import { getAllTaskOfUser } from '@/utils/data/task/getAllTaskOfUser';
+import { generateDailyActions } from '@/utils/ai/generatePlans';
 
 
 const PlansPage = () => {
@@ -30,7 +30,7 @@ const PlansPage = () => {
     const [actions, setActions] = useState<Action[]| null>(null);
     const [open, setOpen] = useState<boolean>(false);
     const [aiPlansloading, setAiPlansLoading] = useState<boolean>(false);
-    const [aiPlans, setAiPlans] = useState<Plan[]|null>(null);
+    const [aiPlans, setAiPlans] = useState<Action[]|null>(null);
     const [plansLoading, setPlansLoading] = useState<boolean>(false);
     var isToday = isSameDay(selectedDate, new Date());
     var isPast = selectedDate < new Date(new Date().setHours(0, 0, 0, 0));
@@ -39,10 +39,14 @@ const PlansPage = () => {
 
     const router = useRouter();
     const generateAIPlans = async () => {
+        if(tasksLoading || tasks === null || tasks.length === 0) {
+            toast.error("cannot generate ai plans for the day");
+            return;
+        }
         try {
             setAiPlansLoading(true);
-            const aiPlans: Plan[] | null = await generatePlans();
-            setAiPlans(aiPlans);
+            const aiGenPlans: Action[] | null = await generateDailyActions({tasks: tasks});
+            setAiPlans(aiGenPlans);
             router.refresh();
             toast.success("fetched ai plans for the day");
         } catch (e) {
@@ -96,71 +100,92 @@ const PlansPage = () => {
         </div>
     }
     return (
-        <div className="p-6">
-            <div className="mb-6">
-                <h2 className="text-2xl font-bold">
-                    Plans for {format(selectedDate, 'MMMM d, yyyy')}
-                </h2>
-                <p className="text-muted-foreground">
-                    {isToday ? "Today's" : isPast ? "Past" : "Future"} Plans
-                </p>
-            </div>
-            
-            {/* Plans list will go here */}
-            <div className="space-y-4">
-                {isPast ? (
-                    <div>View past plans here</div>
-                ) : (
-                    <div>
-                        {
-                            plansLoading ? (
-                                <div className='text-muted-foreground'>Loading plans...</div>
-                            ) : actions && actions.length > 0 ? (
+        <div className="w-full space-y-6">
+            <div className="grid grid-cols-2 lg:grid-cols-12 gap-6">
+                {/* Left Column - Calendar and Form */}
+                <div className="lg:col-span-4 space-y-6">
+                    <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-100 p-6">
+                        <h2 className="text-2xl font-bold">
+                            Plans for {format(selectedDate, 'MMMM d, yyyy')}
+                        </h2>
+                        <p className="text-muted-foreground">
+                            {isToday ? "Today's" : isPast ? "Past" : "Future"} Plans
+                        </p>
+                    </div>
+                    
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button 
+                                className="w-full bg-gray-800 text-white hover:bg-gray-700 transition-colors"
+                                size="lg"
+                            >
+                                Add New Plan
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Create New Plan</DialogTitle>
+                                <DialogDescription>
+                                    Add a new plan for {format(selectedDate, 'MMMM d, yyyy')}
+                                </DialogDescription>
+                            </DialogHeader>
+                            <PlansForm
+                                onSuccess={() => {
+                                    updatePlans(null);
+                                    toast.success('Plan created successfully');
+                                }}
+                                updatePlans={updatePlans}
+                                selectedDate={selectedDate}
+                                tasks={tasks}
+                            />
+                        </DialogContent>
+                    </Dialog>
+                </div>
+
+                {/* Right Column - AI Plans */}
+                <div className="lg:col-span-8">
+                    <div className="space-y-4">
+                        {isPast ? (
+                            <div>View past plans here</div>
+                        ) : (
+                            <div>
+                                {
+                                    plansLoading ? (
+                                        <div className='text-muted-foreground'>Loading plans...</div>
+                                    ) : actions && actions.length > 0 ? (
+                                        <div>
+                                            {
+                                                actions.map((action) => (
+                                                    <div key={action.id}>
+                                                        <div>{action.title}</div>
+                                                    </div>
+                                                ))
+                                            }
+                                        </div>
+                                    ) : (
+                                        <div>No actions found for the day</div>
+                                    )
+                                }
+                            </div>
+                        )}
+                        <Button onClick={generateAIPlans} disabled={aiPlansloading}> Generate AI Actions</Button>
+                    </div>
+                    <div className='mt-4'>
+                    {
+                        aiPlansloading ? (
+                            <div className='text-muted-foreground'>Generating AI Plans <Loader2 className="animate-spin size-4" /></div>
+                        ) : (
+                            aiPlans && aiPlans.length > 0 ? (
                                 <div>
-                                    {
-                                        actions.map((action) => (
-                                            <div key={action.id}>
-                                                <div>{action.title}</div>
-                                            </div>
-                                        ))
-                                    }
+                                    <ShowSuggestAiPlans actions={aiPlans} />
                                 </div>
                             ) : (
-                                <div>No actions found for the day</div>
+                                <div>No AI plans found for the day</div>
                             )
-                        }
+                        )
+                    }
                     </div>
-                )}
-                <Dialog open={open} onOpenChange={setOpen}>
-                    <DialogTrigger asChild>
-                        <Button size="sm">Create New Action</Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                            <DialogTitle>Create New Action</DialogTitle>
-                            <DialogDescription>
-                                Add a new action for {format(selectedDate, "PPP")}
-                            </DialogDescription>
-                        </DialogHeader>
-                        <PlansForm onSuccess={handleSuccess} updatePlans={updatePlans} selectedDate={selectedDate} tasks={tasks} />
-                    </DialogContent>
-                </Dialog>
-                <Button onClick={generateAIPlans} disabled={aiPlansloading}> Generate AI Actions</Button>
-            </div>
-            <div className='mt-4'>
-            {
-                aiPlansloading ? (
-                    <div className='text-muted-foreground'>Generating AI Plans <Loader2 className="animate-spin size-4" /></div>
-                ) : (
-                    aiPlans && aiPlans.length > 0 ? (
-                        <div>
-                            <ShowSuggestAiPlans plans={aiPlans} />
-                        </div>
-                    ) : (
-                        <div>No AI plans found for the day</div>
-                    )
-                )
-            }
+                </div>
             </div>
         </div>
     );

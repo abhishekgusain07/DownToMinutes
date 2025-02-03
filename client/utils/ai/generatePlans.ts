@@ -1,59 +1,154 @@
 "use server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { Goal, Plan } from "../types";
+import OpenAI from "openai";
+import { Action, Goal, Task } from "../types";
 import { auth } from "@clerk/nextjs/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { getGoal } from "../data/goals/getGoal";
 import { fetchAllActiveGoals } from "../data/goals/fetchAllActiveGoals";
+import { z } from "zod";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY!,
+});
 
-export async function generatePlans(): Promise<Plan[] | null> {
-    try {
-        const cookieStore = await cookies();
-        const supabase = createServerClient(
-            process.env.SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_KEY!,
-            {
-                cookies: {
-                    get(name: string) {
-                        return cookieStore.get(name)?.value;
+// Zod schema for validation
+const ActionSchema = z.object({
+  title: z.string(),
+  duration: z.number().min(15).max(120),
+  task_title: z.string(),
+  task_id: z.string(),
+  day_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  notes: z.string().optional(),
+});
+
+export async function generateDailyActions({
+  tasks
+}: {
+  tasks: Task[];
+}): Promise<Action[] | null> {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("User not authenticated");
+
+    const goals = await fetchAllActiveGoals();
+    if (!goals?.length) return null;
+
+    // Prepare task map for validation
+    const taskMap = new Map<string, Task>(
+      tasks.map(task => [task.id, task])
+    );
+
+    const systemPrompt = `You are a productivity coach specializing in breaking down goals into daily executable actions. 
+    Analyze the user's goals, subgoals, and tasks to generate daily atomic actions. Follow these rules:
+    1. Convert tasks into 15-120 minute actions
+    2. Balance learning, practice, and project work
+    3. Prioritize by goal priority and deadlines
+    4. Use ISO dates (YYYY-MM-DD) for scheduling`;
+
+    const userPrompt = `Generate daily actions for these goals:
+    ${goals.map(goal => `
+    Goal: ${goal.title} (Priority: ${goal.priority})
+    Timeline: ${goal.start_date} to ${goal.end_date}
+    ${goal.subgoals?.map(subgoal => `
+    - Subgoal: ${subgoal.title}
+      ${subgoal.tasks?.map(task => `
+      * Task: ${task.title} (ID:${task.id}, ${task.estimated_hours}h)`).join('')}
+    `).join('')}
+    `).join('')}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4-turbo-preview",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      tools: [{
+        type: "function",
+        function: {
+          name: "generate_actions",
+          description: "Generate daily actionable items for goal achievement",
+          parameters: {
+            type: "object",
+            properties: {
+              actions: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    title: {
+                      type: "string",
+                      description: "Action title (e.g., 'Practice React Hooks')"
                     },
-                },
-            }
-        );
-        const { userId } = await auth();
-        if (!userId) {
-            throw new Error("User not authenticated");
+                    duration: {
+                      type: "number",
+                      description: "Duration in minutes (15-120)"
+                    },
+                    task_title: {
+                      type: "string",
+                      description: "Exact title of the parent task"
+                    },
+                    task_id: {
+                      type: "string",
+                      description: "ID of the parent task"
+                    },
+                    day_date: {
+                      type: "string",
+                      description: "Scheduled date in YYYY-MM-DD format"
+                    },
+                    notes: {
+                      type: "string",
+                      description: "Optional implementation notes"
+                    }
+                  },
+                  required: ["title", "duration", "task_title", "task_id", "day_date"]
+                }
+              }
+            },
+            required: ["actions"]
+          }
         }
-        const goals: Goal[] | null = await fetchAllActiveGoals();
-        if (!goals || goals.length === 0) {
-            return null;
-        }
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-        const allPlans: Plan[] = [];
+      }],
+      tool_choice: {
+        type: "function",
+        function: { name: "generate_actions" }
+      }
+    });
 
-        for (const goal of goals) {
-            const prompt = `As an AI assistant, analyze this goal and suggest realistic, actionable plans.\n        Goal Title: ${goal.title}\n        ${goal.description ? `Goal Description: ${goal.description}` : ''}\n        Timeline: From ${goal.start_date} to ${goal.end_date}\n\n        Current Active Subgoals: \n\n        Please provide a list of 1-2 plans in the following JSON format:\n        [{\n            "id": "unique-id",\n            "task": "Plan title",\n            "description": "Brief description of what needs to be done",\n            "start_time": "start time in ISO format",\n            "end_time": "end time in ISO format",\n            "status": "NOT_STARTED/STARTED/IN_PROGRESS",\n            "effectiveness": 0, // a number representing effectiveness\n            "distractions": 0, // a number representing distractions\n            "note": "optional note",\n            "created_at": "creation date in ISO format",\n            "updated_at": "update date in ISO format",\n            "day_id": "associated day id"\n        }]\n\n        Make sure the plans are:\n        1. Specific and measurable\n        2. Realistic and achievable\n        3. Aligned with the main goal\n        4. Have appropriate frequency based on the timeline\n        5. Progressive (building towards the main goal)`;
+    // Extract and validate response
+    const args = JSON.parse(
+      response.choices[0].message.tool_calls![0].function.arguments
+    );
+    
+    const validation = z.object({
+      actions: z.array(ActionSchema)
+    }).safeParse(args);
 
-            const result = await model.generateContent(prompt);
-            const response = result.response;
-            const text = response.text();
-
-            // Extract JSON from the response
-            const jsonMatch = text.match(/\[[\s\S]*\]/);
-            if (!jsonMatch) {
-                throw new Error("Failed to parse AI response");
-            }
-
-            const plans: Plan[] = JSON.parse(jsonMatch[0]);
-            allPlans.push(...plans);
-        }
-        console.log(allPlans);
-        return allPlans;
-    } catch (error) {
-        console.error("Error generating plans:", error);
-        throw error;
+    if (!validation.success) {
+      console.error("Validation failed:", validation.error);
+      return null;
     }
+
+    // Map validated data to Action structure
+    const date = new Date();
+    return validation.data.actions.map(action => {
+      const task = taskMap.get(action.task_id);
+      if (!task) throw new Error(`Invalid task ID: ${action.task_id}`);
+
+      return {
+        id: crypto.randomUUID(), // Generate unique ID
+        title: action.title,
+        duration: action.duration,
+        completed: false,
+        task_id: action.task_id,
+        day_id: "", // You'll need to implement day_id lookup
+        notes: action.notes,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+    });
+
+  } catch (error) {
+    console.error("Error generating actions:", error);
+    return null;
+  }
 }

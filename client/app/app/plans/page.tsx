@@ -8,9 +8,8 @@ const Plans = async () => {
         redirect("/sign-in");
     }
     return (
-        <div className="min-h-full w-full flex flex-col items-center justify-start py-4 overflow-y-auto">
-            <h1 className="text-3xl font-bold">Plans Page</h1>
-            <div className="flex items-center justify-center mt-4 w-full">
+        <div className="w-full bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+            <div className="max-w-7xl mx-auto">
                 <PlansPage />
             </div>
         </div>

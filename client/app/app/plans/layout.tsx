@@ -1,14 +1,11 @@
+// layout.tsx
 import PlansNavbar from "./_component/plansNavbar";
 
 const PlansLayout = ({ children }: { children: React.ReactNode }) => {
     return (
-        <div className="h-full relative">
-            <div className="hidden md:flex h-full w-[80px] z-30 flex-col fixed inset-y-0">
-                <div className="flex flex-col justify-between h-full">      
-                </div>
-            </div>
-            <main className="md:pl-[80px] h-full overflow-y-auto">
-                <PlansNavbar/>
+        <div className="h-screen w-full flex flex-col"> {/* Changed to h-screen and flex-col */}
+            <PlansNavbar />
+            <main className="flex-1 overflow-y-auto"> {/* Removed fixed height */}
                 {children}
             </main>
         </div>

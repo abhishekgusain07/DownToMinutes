@@ -100,7 +100,7 @@ export interface Subgoal {
   completed: boolean;
   goal_id: string;
   user_id: string;
-  tasks: Task[];
+  tasks ?: Task[];
   
   // Computed fields
   progress: number;        // Calculated from tasks completion (0-100)
@@ -122,7 +122,7 @@ export interface Goal {
   completed: boolean;
   user_id: string;
   progress_type: ProgressType;
-  subgoals: Subgoal[];
+  subgoals ?: Subgoal[];
   
   // Computed fields
   overall_progress: number;       // Average progress of all subgoals (0-100)

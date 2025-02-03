@@ -33,7 +33,13 @@ export const fetchAllActiveGoals = async():Promise<Goal[] | null> => {
 
         const { data, error } = await supabase
             .from("goal")
-            .select()
+            .select(`
+                *,
+                subgoals:subgoal(
+                *,
+                tasks:task(*)
+                )
+            `)
             .eq("user_id", userData.id)
             .eq("active", true);
 
