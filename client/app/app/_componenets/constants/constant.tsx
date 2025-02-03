@@ -1,11 +1,20 @@
 import {
+  Activity,
     BellIcon,
     LucideGoal,
     PersonStanding,
     PlaneTakeoffIcon,
     Settings2,
+    TargetIcon,
 } from "lucide-react";
 export const links = [
+    {
+      label: "Today's Actions",
+      href: "/app/plans",
+      icon: (
+        <Activity className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
     {
       label: "Goals",
       href: "/app/goals",
@@ -25,13 +34,6 @@ export const links = [
       href: "/app/notifications",
       icon: (
         <BellIcon className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
-    {
-      label: "Plans",
-      href: "/app/plans",
-      icon: (
-        <PlaneTakeoffIcon className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
     },
     {

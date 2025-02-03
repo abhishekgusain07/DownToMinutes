@@ -443,7 +443,18 @@ export interface Plan {
   updated_at: Date;
   day_id: string;
 }
+export interface Action{
+  id: string;
+  title: string;
+  duration: number;
+  completed: boolean;
+  task_id: string;
+  day_id: string;
+  note?: string;
+  created_at: Date;
+  updated_at: Date;
 
+}
 export interface PlanFeedback {
   id: string;
   created_at: Date;

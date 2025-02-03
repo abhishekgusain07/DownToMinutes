@@ -36,6 +36,7 @@ import { useState } from "react";
 import { taskFormSchema, TaskFormValues } from "@/utils/zod/schemas";
 import { createTask } from "@/utils/data/task/createTask";
 import { Subgoal } from "@/utils/types";
+import { Loader2 } from "lucide-react";
 
 interface CreateNewTaskDialogProps {
     subgoals: Subgoal[];
@@ -46,7 +47,7 @@ interface CreateNewTaskDialogProps {
 export function CreateNewTaskDialog({ subgoals, goalId, onTaskCreated }: CreateNewTaskDialogProps) {
   const [open, setOpen] = useState(false);
   const [subgoalId, setSubgoalId] = useState<string>("");
-
+  const [isCreating, setIsCreating] = useState(false);
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -61,7 +62,7 @@ export function CreateNewTaskDialog({ subgoals, goalId, onTaskCreated }: CreateN
 
   async function onSubmit(data: TaskFormValues) {
     try {
-      // Add subgoal_id to the data
+      setIsCreating(true);
       const taskData = {
         ...data,
         subgoal_id: subgoalId,
@@ -75,6 +76,8 @@ export function CreateNewTaskDialog({ subgoals, goalId, onTaskCreated }: CreateN
     } catch (error) {
       toast.error("Failed to create task. Please try again. ❌");
       console.error("Error creating task:", error);
+    }finally {
+      setIsCreating(false);
     }
   }
 
@@ -237,7 +240,12 @@ export function CreateNewTaskDialog({ subgoals, goalId, onTaskCreated }: CreateN
             />
 
             <DialogFooter>
-              <Button type="submit">Create Task</Button>
+              <Button type="submit" disabled={isCreating}>
+                {isCreating ? "Creating..." : "Create Task"}
+                {isCreating && (
+                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                )}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

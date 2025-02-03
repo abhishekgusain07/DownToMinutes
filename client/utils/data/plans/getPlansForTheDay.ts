@@ -1,6 +1,6 @@
 "use server";
 
-import { Plan, User } from "@/utils/types";
+import { Action, User } from "@/utils/types";
 import { auth } from "@clerk/nextjs/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -21,7 +21,7 @@ export const getPlansForTheDay = async ({
     date
 }: {
     date: Date;
-}):Promise<Plan[] | null> => {
+}):Promise<Action[] | null> => {
     const cookieStore = await cookies();
     const { userId } = await auth();
     
@@ -79,17 +79,17 @@ export const getPlansForTheDay = async ({
         const dayId = dayData[0].id;
 
         // Then fetch all Plans for this day
-        const { data: planData, error: planError } = await supabase
-            .from('Plan')
+        const { data: actionData, error: actionError } = await supabase
+            .from('Action')
             .select("*")
             .eq('day_id', dayId)
             .order('created_at', { ascending: false });
 
-        if (planError) {
-            throw new Error(`Error fetching entries: ${planError.message}`);
+        if (actionError) {
+            throw new Error(`Error fetching entries: ${actionError.message}`);
         }
 
-        return planData as Plan[] || [];
+        return actionData as Action[] || [];
     }catch(err){
         return null;
     }

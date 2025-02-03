@@ -68,6 +68,7 @@ export const createTask = async (data: TaskFormValues & {subgoal_id: string} & {
         created_at: new Date(),
         updated_at: new Date(),
         notes: data.notes,
+        user_id: userData.id,
         subgoal_id: data.subgoal_id,
         goal_id: data.goal_id,
       },

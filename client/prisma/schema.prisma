@@ -129,6 +129,8 @@ model user {
   AccountabilityGroupMember AccountabilityGroupMember[]
 
   NotificationPreference NotificationPreference[]
+
+  task task[]
 }
 
 model payments {
@@ -256,10 +258,15 @@ model task {
   // Relations
   subgoal_id      String
   goal_id         String
+  user_id         String
   subgoal         subgoal    @relation(fields: [subgoal_id], references: [id])
-  goal           goal       @relation(fields: [goal_id], references: [id], onDelete: Cascade)
-  Action Action[]
+  goal            goal       @relation(fields: [goal_id], references: [id], onDelete: Cascade)
+  user            user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  Action          Action[]
+
   @@index([subgoal_id])
+  @@index([user_id])
+  @@index([goal_id])
 }
 
 model tag {

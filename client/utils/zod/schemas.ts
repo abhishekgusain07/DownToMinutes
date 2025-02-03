@@ -1,14 +1,12 @@
 import { z } from "zod";
 
-export const planFormSchema = z.object({
-    task: z.string().min(1, 'Task is required'),
-    description: z.string().optional(),
-    from_time: z.string().min(1, 'Start time is required'),
-    to_time: z.string().min(1, 'End time is required'),
-    status: z.enum(['NOT_STARTED', 'STARTED', 'IN_PROGRESS', 'NOT_DONE']),
-    effectiveness: z.number().min(1).max(10),
-    distractions: z.number().min(1).max(10),
-    note: z.string().optional(),
+export const actionFormSchema = z.object({
+    title: z.string().min(1, 'Title is required'),
+    duration: z.number().min(1, 'Duration must be at least 1 minute').int(),
+    completed: z.boolean().optional(),
+    task_id: z.string().min(1, 'Task is required'),
+    day_id: z.string().min(1, 'Day is required').optional(),
+    notes: z.string().optional(),
 });
 
 export const subgoalFormSchema = z.object({

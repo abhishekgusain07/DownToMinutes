@@ -1,6 +1,5 @@
 "use server"
 import { z } from "zod";
-import { planFormSchema } from "@/utils/zod/schemas";
 import { cookies } from "next/headers";
 import { auth } from "@clerk/nextjs/server";
 import { createServerClient } from "@supabase/ssr";
@@ -8,6 +7,7 @@ import { User } from "@/utils/types";
 import { getUser } from "../user/getUser";
 import { uid } from "uid";
 import { revalidatePath } from "next/cache";
+import { actionFormSchema } from "@/utils/zod/schemas";
 
 
 // Format function to match Supabase datetime format
@@ -21,7 +21,7 @@ function formatDateTime(date: Date) {
         String(date.getMilliseconds()).slice(0, 1);
 }
 
-export const createPlan = async ({data}:{data: z.infer<typeof planFormSchema>}) => {
+export const createPlan = async ({data}:{data: z.infer<typeof actionFormSchema>}) => {
     const cookieStore = await cookies();
     const { userId } = await auth();
     
@@ -99,32 +99,29 @@ export const createPlan = async ({data}:{data: z.infer<typeof planFormSchema>}) 
     }
         console.log("here ✅ ✅ ✅ ✅✅ vv ✅✅✅")
         //create plan entry
-        const {data: plansData, error: plansError} = await supabase
-        .from("Plan")
+        const {data: actionData, error: actionError} = await supabase
+        .from("Action")
         .insert([
             {
                 id: uid(32),
-                task: data.task,
-                description: data.description,
-                from_time: data.from_time,
-                to_time: data.to_time,
-                status: data.status,
-                effectiveness: data.effectiveness,
-                distractions: data.distractions,
-                note: data.note,
+                day_id: dayId,
+                task_id: data.task_id,
+                title: data.title,
+                duration: data.duration,
+                completed: false,
                 created_at: now.toISOString(),
                 updated_at: now.toISOString(),
-                day_id: dayId
+                notes: data.notes ?? ""
             }
         ])
         .select()
         .single();
-        if(plansError || !plansData){
-            console.log(plansError)
+        if(actionError || !actionData){
+            console.log(actionError)
             throw new Error("Failed to create plan");
         }   
-        revalidatePath("/plans");
-        return plansData
+        revalidatePath("/app/plans");
+        return actionData
 
     } catch (error) {
         throw error;

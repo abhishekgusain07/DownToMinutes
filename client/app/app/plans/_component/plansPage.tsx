@@ -3,7 +3,7 @@
 import { usePlanDateStore } from '@/store/usePlanDateStore';
 import { getPlansForTheDay } from '@/utils/data/plans/getPlansForTheDay';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dotted-dialog"
-import { Plan } from '@/utils/types';
+import { Action, Plan, Task } from '@/utils/types';
 import { format, isSameDay } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -17,22 +17,26 @@ import { z } from 'zod';
 import { addHours } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
-import { planFormSchema } from '@/utils/zod/schemas';
+import { actionFormSchema } from '@/utils/zod/schemas';
 import { createPlan } from '@/utils/data/plans/createPlan';
 import { useRouter } from 'next/navigation';
 import { generatePlans } from '@/utils/ai/generatePlans';
 import ShowSuggestAiPlans from './showSuggestAiPlans';
+import { getAllTaskOfUser } from '@/utils/data/task/getAllTaskOfUser';
 
 
 const PlansPage = () => {
     const { selectedDate } = usePlanDateStore();
-    const [plans, setPlans] = useState<Plan[]| null>(null);
+    const [actions, setActions] = useState<Action[]| null>(null);
     const [open, setOpen] = useState<boolean>(false);
     const [aiPlansloading, setAiPlansLoading] = useState<boolean>(false);
     const [aiPlans, setAiPlans] = useState<Plan[]|null>(null);
     const [plansLoading, setPlansLoading] = useState<boolean>(false);
     var isToday = isSameDay(selectedDate, new Date());
     var isPast = selectedDate < new Date(new Date().setHours(0, 0, 0, 0));
+    const [tasks, setTasks] = useState<Task[] | null>(null)
+    const [tasksLoading, setTasksLoading] = useState<boolean>(false);
+
     const router = useRouter();
     const generateAIPlans = async () => {
         try {
@@ -53,24 +57,44 @@ const PlansPage = () => {
         const fetchPlansForTheDay = async() => {
             try {
                 setPlansLoading(true);
-                const data = await getPlansForTheDay({date: selectedDate});
-                setPlans(data);
+                const data: Action[] | null = await getPlansForTheDay({date: selectedDate});
+                setActions(data);
                 router.refresh();
-                toast.success("fetched plans for the day");
+                toast.success("fetched actions for the day");
             } catch (e) {
-                toast.error("cannot fetch plans for the day");
+                toast.error("cannot fetch actions for the day");
             } finally {
                 setPlansLoading(false);
             }
         }
+        const fetchAllTaskOfUser = async () => {
+            try {
+                setTasksLoading(true);
+                const data: Task[] | null = await getAllTaskOfUser();
+                setTasks(data);
+                router.refresh();
+                toast.success("fetched tasks");
+            } catch (e) {
+                toast.error("cannot fetch tasks");
+            } finally {
+                setTasksLoading(false);
+            }
+        }
         fetchPlansForTheDay();
+        fetchAllTaskOfUser();
     }, [selectedDate]);
     const handleSuccess = () => {
         setOpen(false);
     };
-    const updatePlans = async (newPlans: (Plan[] | null)) => {
-        setPlans(newPlans);
+    const updatePlans = async (newActions: (Action[] | null)) => {
+        setActions(newActions);
     };
+
+    if(tasksLoading || plansLoading) {
+        return <div className='h-full w-full flex justify-center items-center'>
+            <Loader2 className='size-4 animate-spin' />
+        </div>
+    }
     return (
         <div className="p-6">
             <div className="mb-6">
@@ -91,37 +115,37 @@ const PlansPage = () => {
                         {
                             plansLoading ? (
                                 <div className='text-muted-foreground'>Loading plans...</div>
-                            ) : plans && plans.length > 0 ? (
+                            ) : actions && actions.length > 0 ? (
                                 <div>
                                     {
-                                        plans.map((plan) => (
-                                            <div key={plan.id}>
-                                                <div>{plan.task}</div>
+                                        actions.map((action) => (
+                                            <div key={action.id}>
+                                                <div>{action.title}</div>
                                             </div>
                                         ))
                                     }
                                 </div>
                             ) : (
-                                <div>No plans found for the day</div>
+                                <div>No actions found for the day</div>
                             )
                         }
                     </div>
                 )}
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
-                        <Button size="sm">Open Dialog</Button>
+                        <Button size="sm">Create New Action</Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
-                            <DialogTitle>Create New Plan</DialogTitle>
+                            <DialogTitle>Create New Action</DialogTitle>
                             <DialogDescription>
-                                Add a new plan for {format(selectedDate, "PPP")}
+                                Add a new action for {format(selectedDate, "PPP")}
                             </DialogDescription>
                         </DialogHeader>
-                        <PlansForm onSuccess={handleSuccess} updatePlans={updatePlans} selectedDate={selectedDate} />
+                        <PlansForm onSuccess={handleSuccess} updatePlans={updatePlans} selectedDate={selectedDate} tasks={tasks} />
                     </DialogContent>
                 </Dialog>
-                <Button onClick={generateAIPlans} disabled={aiPlansloading}> Generate AI Plans</Button>
+                <Button onClick={generateAIPlans} disabled={aiPlansloading}> Generate AI Actions</Button>
             </div>
             <div className='mt-4'>
             {
@@ -143,48 +167,56 @@ const PlansPage = () => {
 };
 
 
-const PlansForm = ({onSuccess, updatePlans, selectedDate}: {onSuccess: () => void, updatePlans: (newPlans: Plan[]|null) => void, selectedDate: Date}) => {
+const PlansForm = ({
+    onSuccess,
+    updatePlans,
+    selectedDate,
+    tasks,
+}: {
+    onSuccess: () => void,
+    updatePlans: (newPlans: Action[]|null) => void,
+    selectedDate: Date,
+    tasks: Task[] | null,
+}) => {
     const router = useRouter();
-    const form = useForm<z.infer<typeof planFormSchema>>({
-        resolver: zodResolver(planFormSchema),
+    const form = useForm<z.infer<typeof actionFormSchema>>({
+        resolver: zodResolver(actionFormSchema),
         defaultValues: {
-            task: "",
-            description: "",
-            from_time: format(new Date(), "HH:mm"),
-            to_time: format(addHours(new Date(), 1), "HH:mm"),
-            status: "NOT_STARTED",
-            effectiveness: 5,
-            distractions: 5,
-            note: "",
+            title: "",
+            duration: 30,
+            completed: false,
+            task_id: "",
+            notes: "",
         }
     });
-    const handleSubmit = async (values: any) => {
+
+    const handleSubmit = async (values: z.infer<typeof actionFormSchema>) => {
         try {
             await createPlan({data: values});
             form.reset();
             onSuccess();
             const data = await getPlansForTheDay({date: selectedDate});
             updatePlans(data);
-            router.push("/plans")
             router.refresh();
-            toast.success("Plan created successfully!");
+            toast.success("Action created successfully!");
         } catch (error) {
             console.error(error);
-            toast.error("Failed to create plan");
+            toast.error("Failed to create action");
         }
     };
 
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+
                 <FormField
                     control={form.control}
-                    name="task"
+                    name="title"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Task</FormLabel>
+                            <FormLabel>Title</FormLabel>
                             <FormControl>
-                                <Input placeholder="Enter your task" {...field} />
+                                <Input placeholder="Enter action title" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -193,87 +225,58 @@ const PlansForm = ({onSuccess, updatePlans, selectedDate}: {onSuccess: () => voi
 
                 <FormField
                     control={form.control}
-                    name="description"
+                    name="duration"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Description (Optional)</FormLabel>
+                            <FormLabel>Duration (minutes)</FormLabel>
                             <FormControl>
-                                <Textarea 
-                                    placeholder="Describe your task"
-                                    className="resize-none"
-                                    {...field} 
+                                <Input
+                                    type="number"
+                                    min={1}
+                                    placeholder="Enter duration in minutes"
+                                    {...field}
+                                    onChange={e => field.onChange(parseInt(e.target.value))}
                                 />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
                     )}
                 />
-
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="from_time"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Start Time</FormLabel>
-                                <FormControl>
-                                    <Input type="time" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        control={form.control}
-                        name="to_time"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>End Time</FormLabel>
-                                <FormControl>
-                                    <Input type="time" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-
                 <FormField
                     control={form.control}
-                    name="status"
+                    name="task_id"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Status</FormLabel>
+                            <FormLabel>Select Task</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select status" />
+                                        <SelectValue placeholder="Select a task" />
                                     </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                    <SelectItem value="NOT_STARTED">Not Started</SelectItem>
-                                    <SelectItem value="STARTED">Started</SelectItem>
-                                    <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                                    <SelectItem value="NOT_DONE">Not Done</SelectItem>
+                                    {tasks && tasks.map((task) => (
+                                        <SelectItem key={task.id} value={task.id}>
+                                            {task.title}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                             <FormMessage />
                         </FormItem>
                     )}
                 />
-
                 <FormField
                     control={form.control}
-                    name="note"
+                    name="notes"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Note (Optional)</FormLabel>
+                            <FormLabel>Notes (Optional)</FormLabel>
                             <FormControl>
-                                <Textarea 
-                                    placeholder="Add any notes"
+                                <Textarea
+                                    placeholder="Add any additional notes"
                                     className="resize-none"
-                                    {...field} 
+                                    {...field}
                                 />
                             </FormControl>
                             <FormMessage />
@@ -281,63 +284,19 @@ const PlansForm = ({onSuccess, updatePlans, selectedDate}: {onSuccess: () => voi
                     )}
                 />
 
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="effectiveness"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Effectiveness (1-10)</FormLabel>
-                                <FormControl>
-                                    <Input 
-                                        type="number" 
-                                        min={1} 
-                                        max={10}
-                                        {...field}
-                                        onChange={e => field.onChange(parseInt(e.target.value))}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        control={form.control}
-                        name="distractions"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Distractions (1-10)</FormLabel>
-                                <FormControl>
-                                    <Input 
-                                        type="number"
-                                        min={1}
-                                        max={10}
-                                        {...field}
-                                        onChange={e => field.onChange(parseInt(e.target.value))}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-
-                <DialogFooter>
-                    <Button type="submit" disabled={form.formState.isSubmitting}>
-                        {form.formState.isSubmitting ? (
-                            <div className="flex items-center gap-2">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Creating...
-                            </div>
-                        ) : (
-                            "Create Plan"
-                        )}
-                    </Button>
-                </DialogFooter>
+                <Button type="submit" disabled={form.formState.isSubmitting} className="w-full">
+                    {form.formState.isSubmitting ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Creating...
+                        </>
+                    ) : (
+                        'Create Action'
+                    )}
+                </Button>
             </form>
         </Form>
     );
-}
+};
 
 export default PlansPage;
