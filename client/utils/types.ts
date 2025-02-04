@@ -455,6 +455,45 @@ export interface Action{
   updated_at: Date;
 
 }
+export interface TaskActionPlan {
+  id: string;
+  task: Task;
+  task_id: string;
+  user: User;
+  user_id: string;
+  version: number;
+  start_date: Date;
+  end_date: Date;
+  actionItems: ActionItem[];
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface ActionItem {
+  id: string;
+  plan_id: string;
+  date: Date;
+  duration: number;
+  description: string;
+  status: ActionItemStatus;
+  task_id: string;
+  day_id: string;
+  created_at: Date;
+  updated_at: Date;
+}
+export interface PartialActionItem {
+  id: string;
+  date: Date;
+  duration: number;
+  description: string;
+}
+
+export enum ActionItemStatus {
+  PENDING = "PENDING",
+  COMPLETED = "COMPLETED",
+  SKIPPED = "SKIPPED"
+}
+
 export interface PlanFeedback {
   id: string;
   created_at: Date;

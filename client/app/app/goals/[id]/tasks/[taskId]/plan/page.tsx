@@ -5,13 +5,8 @@ const ActionPlan = async ({params}: {params: Promise<{ id: string, taskId: strin
     const goalId = (await params).id;
     const taskId = (await params).taskId;
     return (
-        <div>
-            Action Plan
-            <div>
-                <p>Goal Id: {goalId}</p>
-                <p>Task Id: {taskId}</p>
+        <div className="min-h-screen min-w-screen p-5 m-5">
                 <CalendarView goalId={goalId} taskId={taskId} />
-            </div>
         </div>
     )
 }

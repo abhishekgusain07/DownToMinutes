@@ -1,16 +1,18 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Task } from '@/utils/types';
+import { PartialActionItem, Task } from '@/utils/types';
 import { getTaskById } from '@/utils/data/task/getTaskById';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { format, eachDayOfInterval, startOfToday, isSameDay, isToday } from 'date-fns';
-import { Plus, X, Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { Plus, X, Calendar as CalendarIcon, Clock, Sparkles, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { uid } from 'uid';
+import { generateTaskActions } from '@/utils/ai/generateTaskAction';
 
 interface CalendarViewProps {
   goalId: string;
@@ -20,19 +22,20 @@ interface CalendarViewProps {
 interface ActionItem {
   id: string;
   date: Date;
-  title: string;
+  description: string;
   duration: number;
 }
 
 const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
   const [task, setTask] = useState<Task | null>(null);
-  const [actions, setActions] = useState<ActionItem[]>([]);
+  const [actions, setActions] = useState<ActionItem[]|PartialActionItem[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newAction, setNewAction] = useState({
     title: '',
     duration: 30,
   });
+  const [generatingAiActions, setGeneratingAiActions] = useState(false);
   const [days, setDays] = useState<Date[]>([]);
 
   useEffect(() => {
@@ -57,9 +60,9 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
   const handleAddAction = () => {
     if (selectedDate && newAction.title) {
       const newActionItem: ActionItem = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: uid(32),
         date: selectedDate,
-        title: newAction.title,
+        description: newAction.title,
         duration: newAction.duration
       };
 
@@ -68,7 +71,18 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
       setNewAction({ title: '', duration: 30 });
     }
   };
-
+  const generateAiPlan = async() => {
+    setGeneratingAiActions(true);
+    try{
+      const actions = await generateTaskActions({task: task!})
+      console.log("actions ✅", actions)
+      setActions(actions!)
+    }catch(error){ 
+      console.error("Error generating AI plan:", error);
+    }finally{
+      setGeneratingAiActions(false);
+    }
+  }
   const handleDeleteAction = (actionId: string) => {
     setActions(actions.filter(action => action.id !== actionId));
   };
@@ -79,7 +93,7 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
   };
 
   const getActionsForDate = (date: Date) => {
-    return actions.filter(action => isSameDay(new Date(action.date), date));
+    return actions?.filter(action => isSameDay(new Date(action.date), date));
   };
 
   if (!task) {
@@ -97,95 +111,119 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
   }
 
   return (
-    <div className="p-4 md:p-6 bg-gradient-to-br from-white to-slate-50 rounded-xl shadow-xl">
-      <div className="mb-6 space-y-4 md:space-y-0 md:flex md:justify-between md:items-center">
+    <div className="p-4 md:p-8 bg-gradient-to-br from-white via-slate-50 to-white rounded-2xl shadow-2xl border border-slate-100">
+      <div className="mb-8 space-y-4 md:space-y-0 md:flex md:justify-between md:items-center">
         <div className="space-y-2">
-          <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
             Action Plan
           </h2>
-          <div className="flex items-center space-x-2 text-gray-600">
+          <div className="flex items-center space-x-2 text-slate-600">
             <CalendarIcon className="h-4 w-4" />
-            <p className="text-sm">
+            <p className="text-sm font-medium">
               Due: {format(new Date(task.due_date), 'PPP')}
             </p>
           </div>
         </div>
+        <div className="flex space-x-2">
         <Button 
           onClick={handleSaveAll}
-          className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+          className="w-full md:w-auto bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
         >
           Save Plan
         </Button>
+        <Button 
+          onClick={generateAiPlan}
+          className="w-full md:w-auto bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
+        >
+          {
+            generatingAiActions ? `Generating` : `Generate Plan `
+          }
+          {
+            generatingAiActions ? <Loader2 className='animate-spin size-2' /> : <Sparkles className='size-2' />
+          }
+        </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-7 gap-4 overflow-x-auto pb-4">
+      <div className="grid grid-cols-1 md:grid-cols-7 gap-4 md:gap-6 overflow-x-auto pb-4">
         <div className="hidden md:grid md:grid-cols-7 md:col-span-7 gap-4 mb-4">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-            <div key={day} className="text-center font-medium text-gray-600 py-2">
+            <div key={day} className="text-center font-semibold text-slate-600 py-2">
               {day}
             </div>
           ))}
         </div>
         
-        {days.map((date) => {
+        {days.map((date, index) => {
           const dayActions = getActionsForDate(date);
           return (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
               key={date.toISOString()}
               className={cn(
-                "min-h-[140px] border rounded-xl p-3 relative transition-all duration-200",
-                "hover:border-blue-400 hover:shadow-md",
-                "bg-white backdrop-blur-sm",
-                isToday(date) && "ring-2 ring-blue-500 ring-opacity-50"
+                "min-h-[160px] border rounded-2xl p-4 relative transition-all duration-300",
+                "hover:border-blue-400 hover:shadow-lg hover:scale-[1.02]",
+                "bg-white backdrop-blur-lg",
+                isToday(date) && "ring-2 ring-blue-500 ring-opacity-50 shadow-md"
               )}
             >
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-gray-600">
-                  {format(date, 'E')}
-                </span>
-                <span className={cn(
-                  "text-sm font-semibold rounded-full w-7 h-7 flex items-center justify-center",
-                  isToday(date) ? "bg-blue-500 text-white" : "text-gray-700"
-                )}>
-                  {format(date, 'd')}
-                </span>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-medium text-slate-400">
+                    {format(date, 'E')}
+                  </span>
+                  <span className={cn(
+                    "text-lg font-bold mt-0.5",
+                    isToday(date) ? "text-blue-600" : "text-slate-700"
+                  )}>
+                    {format(date, 'd')}
+                  </span>
+                </div>
+                {isToday(date) && (
+                  <span className="px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full">
+                    Today
+                  </span>
+                )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <AnimatePresence>
-                  {dayActions.map((action) => (
+                  {dayActions?.map((action) => (
                     <motion.div
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
+                      transition={{ duration: 0.2 }}
                       key={action.id}
-                      className="text-sm bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-2 group relative"
+                      className="text-sm bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl p-3 group relative hover:shadow-sm transition-all duration-200"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-700 truncate flex-1">
-                          {action.title}
+                        <span className="font-medium text-slate-700 truncate flex-1">
+                          {action.description}
                         </span>
                         <button
                           onClick={() => handleDeleteAction(action.id)}
-                          className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity duration-200"
+                          className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-all duration-200"
                         >
                           <X size={14} />
                         </button>
                       </div>
-                      <div className="flex items-center mt-1 text-xs text-gray-500">
+                      <div className="flex items-center mt-1.5 text-xs text-slate-500">
                         <Clock size={12} className="mr-1" />
                         {action.duration} min
                       </div>
                     </motion.div>
                   ))}
                 </AnimatePresence>
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => handleDateClick(date)}
-                  className="absolute bottom-2 right-2 p-1.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-colors duration-200"
+                  className="absolute bottom-3 right-3 p-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md hover:shadow-lg transition-all duration-200"
                 >
                   <Plus size={16} />
-                </button>
+                </motion.button>
               </div>
             </motion.div>
           );
@@ -193,56 +231,42 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] rounded-2xl bg-gradient-to-br from-white via-slate-50 to-white p-6">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
               Add New Action
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-6 py-4">
+          <div className="space-y-6 mt-6">
             <div className="space-y-2">
-              <Label className="text-gray-700">Selected Date</Label>
-              <div className="flex items-center space-x-2 text-gray-600 bg-gray-50 p-2 rounded-lg">
-                <CalendarIcon className="h-4 w-4" />
-                <p className="text-sm">
-                  {selectedDate && format(selectedDate, 'PPP')}
-                </p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="title" className="text-gray-700">Action Title</Label>
+              <Label htmlFor="title" className="text-sm font-medium text-slate-700">
+                Action Title
+              </Label>
               <Input
                 id="title"
                 value={newAction.title}
                 onChange={(e) => setNewAction({ ...newAction, title: e.target.value })}
-                placeholder="Enter action title"
-                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                placeholder="Enter action title..."
+                className="rounded-xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="duration" className="text-gray-700">Duration (minutes)</Label>
+              <Label htmlFor="duration" className="text-sm font-medium text-slate-700">
+                Duration (minutes)
+              </Label>
               <Input
                 id="duration"
                 type="number"
                 value={newAction.duration}
                 onChange={(e) => setNewAction({ ...newAction, duration: parseInt(e.target.value) })}
-                min={15}
-                max={480}
-                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                className="rounded-xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsModalOpen(false)}
-              className="border-gray-300 hover:bg-gray-50"
-            >
-              Cancel
-            </Button>
+          <DialogFooter className="mt-8">
             <Button
               onClick={handleAddAction}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+              className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
             >
               Add Action
             </Button>
