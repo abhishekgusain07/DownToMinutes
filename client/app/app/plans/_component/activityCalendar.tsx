@@ -25,7 +25,7 @@ export const ActivityCalendar = ({ data }: ActivityCalendarProps) => {
                 value={value}
                 width={720}
                 style={{ color: '#148B47' }}
-                startDate={subDays(new Date(), 365)}
+                startDate={startOfYear(new Date())}
                 rectSize={12}
                 space={4}
                 legendCellSize={0}

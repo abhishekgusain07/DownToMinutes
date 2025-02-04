@@ -106,6 +106,7 @@ model user {
   subscription      String?
   isDeleted         Boolean   @default(false)
   deletedAt         DateTime?
+  daily_hour_limit  Int?
   goals             goal[]
   subgoals         subgoal[]
   days             day[]
@@ -131,6 +132,8 @@ model user {
   NotificationPreference NotificationPreference[]
 
   task task[]
+
+  TaskActionPlan TaskActionPlan[]
 }
 
 model payments {
@@ -267,6 +270,8 @@ model task {
   @@index([subgoal_id])
   @@index([user_id])
   @@index([goal_id])
+  TaskActionPlan TaskActionPlan[]
+  ActionItem ActionItem[]
 }
 
 model tag {
@@ -315,6 +320,8 @@ model day {
   highlights      String[]  
   notifications     Notification[]
   daily_reflection DailyReflection? 
+
+  ActionItem ActionItem[]
 }
 model DailyReflection {
   id            String @id @default(uuid())
@@ -354,6 +361,47 @@ model Action {
   notes        String?   // For blockers or reflections
   created_at   DateTime  @default(now())
   updated_at   DateTime  @updatedAt
+}
+model TaskActionPlan {
+  id          String       @id @default(cuid())
+  task        task         @relation(fields: [task_id], references: [id])
+  task_id     String
+  user        user         @relation(fields: [user_id], references: [id])
+  user_id     String
+  version     Int          @default(1)
+  start_date  DateTime     // Plan start date (Feb 4)
+  end_date    DateTime     // Aligns with task.due_date (Feb 14)
+  actionItems ActionItem[] // Relational link to daily actions
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
+
+  @@index([task_id])
+  @@index([user_id])
+}
+
+model ActionItem {
+  id          String           @id @default(cuid())
+  plan        TaskActionPlan   @relation(fields: [plan_id], references: [id])
+  plan_id     String
+  date        DateTime         // Action date (Feb 5)
+  duration    Int              // Minutes (e.g., 60 = 1 hour)
+  description String           // "Learn Next.js Routing"
+  status      ActionItemStatus @default(PENDING)
+  task        task             @relation(fields: [task_id], references: [id])
+  task_id     String           // Direct link to task for quick queries
+  day         day              @relation(fields: [day_id], references: [id])
+  day_id      String
+  created_at  DateTime         @default(now())
+  updated_at  DateTime         @updatedAt
+
+  @@index([date])
+  @@index([plan_id])
+}
+
+enum ActionItemStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
 }
 
 model PlanFeedback {

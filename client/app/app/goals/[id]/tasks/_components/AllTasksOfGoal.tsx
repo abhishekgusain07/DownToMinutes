@@ -12,27 +12,30 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateTaskDialog } from "../../../_components/CreateTaskDialog";
 import CreateNewTaskDialog from "../../../_components/CreateNewTaskDIalog";
+import { useRouter } from "next/navigation";
+import { getTaskOfGoalWithActionPlan } from "@/utils/data/task/getTaskofGoalWithActionPlan";
 
 interface AllTasksOfGoalProps {
     goalId: string;
 }
 
 const AllTasksOfGoal = ({ goalId }: AllTasksOfGoalProps) => {
-    const [tasks, setTasks] = useState<Task[]>([]);
+    const [tasksWithPlanId, setTasksWithPlanId] = useState<(Task & {action_plan_id: string | null})[]>([]);
     const [subgoals, setSubgoals] = useState<Subgoal[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedSubgoalId, setSelectedSubgoalId] = useState<string>("all");
-    const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
+    const [filteredTasks, setFilteredTasks] = useState<(Task & {action_plan_id: string | null})[]>([]);
+    const router = useRouter();
     
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const [tasksData, subgoalsData] = await Promise.all([
-                    getTaskOfGoal({ goalId }),
+                    getTaskOfGoalWithActionPlan({ goalId }),
                     getSubgoalsOfGoals({ goalId })
                 ]);
                 
-                setTasks(tasksData || []);
+                setTasksWithPlanId(tasksData || []);
                 setSubgoals(subgoalsData || []);
                 setFilteredTasks(tasksData || []);
             } catch (error) {
@@ -47,11 +50,11 @@ const AllTasksOfGoal = ({ goalId }: AllTasksOfGoalProps) => {
 
     useEffect(() => {
         if (selectedSubgoalId === "all") {
-            setFilteredTasks(tasks);
+            setFilteredTasks(tasksWithPlanId);
         } else {
-            setFilteredTasks(tasks.filter(task => task.subgoal_id === selectedSubgoalId));
+            setFilteredTasks(tasksWithPlanId.filter(task => task.subgoal_id === selectedSubgoalId));
         }
-    }, [selectedSubgoalId, tasks]);
+    }, [selectedSubgoalId, tasksWithPlanId]);
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -70,8 +73,8 @@ const AllTasksOfGoal = ({ goalId }: AllTasksOfGoalProps) => {
 
     const fetchTasks = async () => {
         try {
-            const tasksData = await getTaskOfGoal({ goalId });
-            setTasks(tasksData || []);
+            const tasksData = await getTaskOfGoalWithActionPlan({ goalId });
+            setTasksWithPlanId(tasksData || []);
             setFilteredTasks(tasksData || []);
         } catch (error) {
             console.error("Error fetching tasks:", error);
@@ -134,13 +137,40 @@ const AllTasksOfGoal = ({ goalId }: AllTasksOfGoalProps) => {
                                         <Badge className={getStatusColor(task.status)}>
                                             {task.status.replace(/_/g, " ")}
                                         </Badge>
-                                        <span className="text-sm text-gray-500">
-                                            {task.estimated_hours}h
-                                        </span>
+                                        <div>
+                                        <p className="text-sm text-gray-500">
+                                            Estimated Hours: {task.estimated_hours}h
+                                        </p>
+                                        <p className="text-sm text-gray-500">
+                                            Hours Spent: {task.actual_hours}h
+                                        </p>
+                                        <div className="flex space-x-2 mt-2">
+                                            <Button variant="default" size="sm"
+                                                onClick={() => {
+                                                    router.push(`/app/goals/${goalId}/tasks/${task.id}/plan`)
+                                                }}
+                                            >
+                                                {
+                                                    task.action_plan_id ? "Manage Plan" : "Create Plan"
+                                                }
+                                            </Button>
+                                            {
+                                                task.action_plan_id &&  <Button variant="default" size="sm"
+                                                onClick={() => {
+                                                    router.push(`/app/goals/${goalId}/tasks/${task.id}/view`)
+                                                }}
+                                            >
+                                                {
+                                                    task.action_plan_id && "View Progress"
+                                                }
+                                            </Button>
+                                            }
+                                        </div>
+                                        </div>
                                     </div>
-                                    <div className="text-sm text-gray-500">
+                                    <p className="text-sm text-gray-500">
                                         Due: {format(new Date(task.due_date), "PPP")}
-                                    </div>
+                                    </p>
                                 </div>
                             </CardContent>
                         </Card>
