@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { format, eachDayOfInterval, startOfToday, isSameDay, isToday } from 'date-fns';
-import { Plus, X, Calendar as CalendarIcon, Clock, Sparkles, Loader2 } from 'lucide-react';
+import { Plus, X, Calendar as CalendarIcon, Clock, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { uid } from 'uid';
@@ -26,6 +26,12 @@ interface ActionItem {
   duration: number;
 }
 
+interface DailyHours {
+  [date: string]: number;
+}
+
+const DEFAULT_DAILY_HOURS_LIMIT = 8; // 8 hours per day default
+
 const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
   const [task, setTask] = useState<Task | null>(null);
   const [actions, setActions] = useState<ActionItem[]|PartialActionItem[]>([]);
@@ -37,6 +43,8 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
   });
   const [generatingAiActions, setGeneratingAiActions] = useState(false);
   const [days, setDays] = useState<Date[]>([]);
+  const [dailyHours, setDailyHours] = useState<DailyHours>({});
+  const [showLimitWarning, setShowLimitWarning] = useState(false);
 
   useEffect(() => {
     const fetchTask = async () => {
@@ -57,8 +65,23 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
     setIsModalOpen(true);
   };
 
+  const calculateDailyHours = (date: Date, additionalMinutes: number = 0) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const existingActions = getActionsForDate(date);
+    const totalMinutes = existingActions.reduce((sum, action) => 
+      sum + (action.duration || 0), 0) + additionalMinutes;
+    return totalMinutes / 60; // Convert to hours
+  };
+
   const handleAddAction = () => {
     if (selectedDate && newAction.title) {
+      const newTotalHours = calculateDailyHours(selectedDate, newAction.duration);
+
+      if (newTotalHours > DEFAULT_DAILY_HOURS_LIMIT) {
+        setShowLimitWarning(true);
+        return;
+      }
+
       const newActionItem: ActionItem = {
         id: uid(32),
         date: selectedDate,
@@ -69,8 +92,10 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
       setActions([...actions, newActionItem]);
       setIsModalOpen(false);
       setNewAction({ title: '', duration: 30 });
+      setShowLimitWarning(false);
     }
   };
+
   const generateAiPlan = async() => {
     setGeneratingAiActions(true);
     try{
@@ -83,6 +108,7 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
       setGeneratingAiActions(false);
     }
   }
+
   const handleDeleteAction = (actionId: string) => {
     setActions(actions.filter(action => action.id !== actionId));
   };
@@ -94,6 +120,82 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
 
   const getActionsForDate = (date: Date) => {
     return actions?.filter(action => isSameDay(new Date(action.date), date));
+  };
+
+  const WarningDialog = () => (
+    <Dialog open={showLimitWarning} onOpenChange={setShowLimitWarning}>
+      <DialogContent className="sm:max-w-[425px] rounded-2xl bg-gradient-to-br from-white via-slate-50 to-white p-6">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-2xl font-bold text-amber-600">
+            <AlertCircle className="h-6 w-6" />
+            Daily Hours Limit Exceeded
+          </DialogTitle>
+        </DialogHeader>
+        <div className="mt-4 space-y-4">
+          <p className="text-slate-600">
+            Adding this action would exceed the recommended daily limit of {DEFAULT_DAILY_HOURS_LIMIT} hours.
+          </p>
+          <div className="flex items-center gap-2 p-4 bg-amber-50 rounded-xl">
+            <AlertCircle className="h-5 w-5 text-amber-600" />
+            <p className="text-sm text-amber-700">
+              Consider spreading your tasks across multiple days for better work-life balance.
+            </p>
+          </div>
+        </div>
+        <DialogFooter className="mt-6 space-x-2">
+          <Button
+            onClick={() => setShowLimitWarning(false)}
+            variant="outline"
+            className="rounded-xl"
+          >
+            Adjust Duration
+          </Button>
+          <Button
+            onClick={() => {
+              const newActionItem: ActionItem = {
+                id: uid(32),
+                date: selectedDate!,
+                description: newAction.title,
+                duration: newAction.duration
+              };
+              setActions([...actions, newActionItem]);
+              setIsModalOpen(false);
+              setNewAction({ title: '', duration: 30 });
+              setShowLimitWarning(false);
+            }}
+            className="bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl"
+          >
+            Add Anyway
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
+  const DailyHoursIndicator = ({ date }: { date: Date }) => {
+    const hours = calculateDailyHours(date);
+    const percentage = (hours / DEFAULT_DAILY_HOURS_LIMIT) * 100;
+    
+    return (
+      <div className="mt-2">
+        <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+          <div 
+            className={cn(
+              "h-full transition-all duration-300",
+              percentage > 100 
+                ? "bg-red-500" 
+                : percentage > 75 
+                  ? "bg-amber-500" 
+                  : "bg-blue-500"
+            )}
+            style={{ width: `${Math.min(percentage, 100)}%` }}
+          />
+        </div>
+        <p className="text-xs text-slate-500 mt-1">
+          {hours.toFixed(1)}/{DEFAULT_DAILY_HOURS_LIMIT}h
+        </p>
+      </div>
+    );
   };
 
   if (!task) {
@@ -216,6 +318,7 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
                     </motion.div>
                   ))}
                 </AnimatePresence>
+                <DailyHoursIndicator date={date} />
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
@@ -277,6 +380,7 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <WarningDialog />
     </div>
   );
 };

@@ -259,6 +259,7 @@ export type User = {
   days?: Day[]
   activities?: Activity[]
   tags?: Tag[]
+  daily_hour_limit ?: number
   sent_friend_requests?: FriendRequest[]
   received_friend_requests?: FriendRequest[]
   friendships_as_user1?: Friendship[]
