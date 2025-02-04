@@ -257,8 +257,12 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
               <Input
                 id="duration"
                 type="number"
-                value={newAction.duration}
-                onChange={(e) => setNewAction({ ...newAction, duration: parseInt(e.target.value) })}
+                min="0"
+                value={newAction.duration === 0 ? '' : newAction.duration}
+                onChange={(e) => setNewAction({ 
+                  ...newAction, 
+                  duration: e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0)
+                })}
                 className="rounded-xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
               />
             </div>
