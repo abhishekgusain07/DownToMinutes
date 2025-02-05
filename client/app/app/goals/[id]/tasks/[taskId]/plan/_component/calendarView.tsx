@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { uid } from 'uid';
 import { generateTaskActions } from '@/utils/ai/generateTaskAction';
+import { getActionItemForDate } from '@/utils/data/actionItem/getActionItemForDate';
+import { getUserDailyHourLimit } from '@/utils/data/user/getUserDailyHourLimit';
 
 interface CalendarViewProps {
   goalId: string;
@@ -26,25 +28,36 @@ interface ActionItem {
   duration: number;
 }
 
+interface NewAction {
+  title: string;
+  duration: number;
+}
+
 interface DailyHours {
   [date: string]: number;
 }
-
-const DEFAULT_DAILY_HOURS_LIMIT = 8; // 8 hours per day default
 
 const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
   const [task, setTask] = useState<Task | null>(null);
   const [actions, setActions] = useState<ActionItem[]|PartialActionItem[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newAction, setNewAction] = useState({
-    title: '',
-    duration: 30,
-  });
+  const [newAction, setNewAction] = useState<NewAction>({ title: '', duration: 30 });
   const [generatingAiActions, setGeneratingAiActions] = useState(false);
+  const [showLimitWarning, setShowLimitWarning] = useState(false);
+  const [dailyHourLimit, setDailyHourLimit] = useState<number>(8); // Default value until loaded
   const [days, setDays] = useState<Date[]>([]);
   const [dailyHours, setDailyHours] = useState<DailyHours>({});
-  const [showLimitWarning, setShowLimitWarning] = useState(false);
+  const [isLoadingHours, setIsLoadingHours] = useState<{[key: string]: boolean}>({});
+  const [isAddingAction, setIsAddingAction] = useState(false);
+
+  useEffect(() => {
+    const loadDailyHourLimit = async () => {
+      const limit = await getUserDailyHourLimit();
+      setDailyHourLimit(limit);
+    };
+    loadDailyHourLimit();
+  }, []);
 
   useEffect(() => {
     const fetchTask = async () => {
@@ -60,39 +73,112 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
     fetchTask();
   }, [taskId]);
 
+  useEffect(() => {
+    const loadHoursForDate = async (date: Date) => {
+      const dateStr = format(date, 'yyyy-MM-dd');
+      setIsLoadingHours(prev => ({ ...prev, [dateStr]: true }));
+      try {
+        const hours = await calculateDailyHours(date);
+        setDailyHours(prev => ({ ...prev, [dateStr]: hours }));
+      } catch (error) {
+        console.error('Error loading hours for date:', error);
+      } finally {
+        setIsLoadingHours(prev => ({ ...prev, [dateStr]: false }));
+      }
+    };
+
+    days.forEach(date => {
+      loadHoursForDate(date);
+    });
+  }, [days]);
+
   const handleDateClick = (date: Date) => {
     setSelectedDate(date);
     setIsModalOpen(true);
   };
 
-  const calculateDailyHours = (date: Date, additionalMinutes: number = 0) => {
+  const calculateDailyHours = async(date: Date, additionalMinutes: number = 0) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    const existingActions = getActionsForDate(date);
-    const totalMinutes = existingActions.reduce((sum, action) => 
+    const existingActions = await getActionItemForDate({date});
+    const totalMinutes = (existingActions).reduce((sum, action) => 
       sum + (action.duration || 0), 0) + additionalMinutes;
     return totalMinutes / 60; // Convert to hours
   };
 
-  const handleAddAction = () => {
+  const handleAddAction = async() => {
     if (selectedDate && newAction.title) {
-      const newTotalHours = calculateDailyHours(selectedDate, newAction.duration);
+      setIsAddingAction(true);
+      try {
+        const newTotalHours = await calculateDailyHours(selectedDate, newAction.duration);
 
-      if (newTotalHours > DEFAULT_DAILY_HOURS_LIMIT) {
-        setShowLimitWarning(true);
-        return;
+        if (newTotalHours > dailyHourLimit) {
+          setShowLimitWarning(true);
+          return;
+        }
+
+        const newActionItem: ActionItem = {
+          id: uid(32),
+          date: selectedDate,
+          description: newAction.title,
+          duration: newAction.duration
+        };
+
+        // Update daily hours for the selected date
+        const dateStr = format(selectedDate, 'yyyy-MM-dd');
+        const currentHours = dailyHours[dateStr] || 0;
+        const newHours = currentHours + (newAction.duration / 60);
+        
+        setActions(prev => [...prev, newActionItem]);
+        setDailyHours(prev => ({ ...prev, [dateStr]: newHours }));
+        setIsModalOpen(false);
+        setNewAction({ title: '', duration: 30 });
+        setShowLimitWarning(false);
+      } catch (error) {
+        console.error('Error adding action:', error);
+      } finally {
+        setIsAddingAction(false);
       }
+    }
+  };
 
-      const newActionItem: ActionItem = {
-        id: uid(32),
-        date: selectedDate,
-        description: newAction.title,
-        duration: newAction.duration
-      };
+  const handleDeleteAction = (actionId: string) => {
+    const actionToDelete = actions.find(action => action.id === actionId);
+    if (actionToDelete) {
+      const dateStr = format(new Date(actionToDelete.date), 'yyyy-MM-dd');
+      const currentHours = dailyHours[dateStr] || 0;
+      const newHours = Math.max(0, currentHours - (actionToDelete.duration / 60));
+      
+      setDailyHours(prev => ({ ...prev, [dateStr]: newHours }));
+      setActions(actions.filter(action => action.id !== actionId));
+    }
+  };
 
-      setActions([...actions, newActionItem]);
-      setIsModalOpen(false);
-      setNewAction({ title: '', duration: 30 });
-      setShowLimitWarning(false);
+  const handleAddAnyway = async () => {
+    if (selectedDate && newAction.title) {
+      setIsAddingAction(true);
+      try {
+        const newActionItem: ActionItem = {
+          id: uid(32),
+          date: selectedDate,
+          description: newAction.title,
+          duration: newAction.duration
+        };
+
+        // Update daily hours for the selected date
+        const dateStr = format(selectedDate, 'yyyy-MM-dd');
+        const currentHours = dailyHours[dateStr] || 0;
+        const newHours = currentHours + (newAction.duration / 60);
+        
+        setActions(prev => [...prev, newActionItem]);
+        setDailyHours(prev => ({ ...prev, [dateStr]: newHours }));
+        setIsModalOpen(false);
+        setNewAction({ title: '', duration: 30 });
+        setShowLimitWarning(false);
+      } catch (error) {
+        console.error('Error adding action:', error);
+      } finally {
+        setIsAddingAction(false);
+      }
     }
   };
 
@@ -109,10 +195,6 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
     }
   }
 
-  const handleDeleteAction = (actionId: string) => {
-    setActions(actions.filter(action => action.id !== actionId));
-  };
-
   const handleSaveAll = async () => {
     // TODO: Save actions to the database
     console.log('Saving actions:', actions);
@@ -122,59 +204,19 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
     return actions?.filter(action => isSameDay(new Date(action.date), date));
   };
 
-  const WarningDialog = () => (
-    <Dialog open={showLimitWarning} onOpenChange={setShowLimitWarning}>
-      <DialogContent className="sm:max-w-[425px] rounded-2xl bg-gradient-to-br from-white via-slate-50 to-white p-6">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-2xl font-bold text-amber-600">
-            <AlertCircle className="h-6 w-6" />
-            Daily Hours Limit Exceeded
-          </DialogTitle>
-        </DialogHeader>
-        <div className="mt-4 space-y-4">
-          <p className="text-slate-600">
-            Adding this action would exceed the recommended daily limit of {DEFAULT_DAILY_HOURS_LIMIT} hours.
-          </p>
-          <div className="flex items-center gap-2 p-4 bg-amber-50 rounded-xl">
-            <AlertCircle className="h-5 w-5 text-amber-600" />
-            <p className="text-sm text-amber-700">
-              Consider spreading your tasks across multiple days for better work-life balance.
-            </p>
-          </div>
-        </div>
-        <DialogFooter className="mt-6 space-x-2">
-          <Button
-            onClick={() => setShowLimitWarning(false)}
-            variant="outline"
-            className="rounded-xl"
-          >
-            Adjust Duration
-          </Button>
-          <Button
-            onClick={() => {
-              const newActionItem: ActionItem = {
-                id: uid(32),
-                date: selectedDate!,
-                description: newAction.title,
-                duration: newAction.duration
-              };
-              setActions([...actions, newActionItem]);
-              setIsModalOpen(false);
-              setNewAction({ title: '', duration: 30 });
-              setShowLimitWarning(false);
-            }}
-            className="bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl"
-          >
-            Add Anyway
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-
   const DailyHoursIndicator = ({ date }: { date: Date }) => {
-    const hours = calculateDailyHours(date);
-    const percentage = (hours / DEFAULT_DAILY_HOURS_LIMIT) * 100;
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const hours = dailyHours[dateStr] || 0;
+    const percentage = (hours / dailyHourLimit) * 100;
+    
+    if (isLoadingHours[dateStr]) {
+      return (
+        <div className="mt-2">
+          <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden animate-pulse"/>
+          <p className="text-xs text-slate-500 mt-1">Loading...</p>
+        </div>
+      );
+    }
     
     return (
       <div className="mt-2">
@@ -192,11 +234,59 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
           />
         </div>
         <p className="text-xs text-slate-500 mt-1">
-          {hours.toFixed(1)}/{DEFAULT_DAILY_HOURS_LIMIT}h
+          {hours.toFixed(1)}/{dailyHourLimit}h
         </p>
       </div>
     );
   };
+
+  const WarningDialog = () => (
+    <Dialog open={showLimitWarning} onOpenChange={setShowLimitWarning}>
+      <DialogContent className="sm:max-w-[425px] rounded-2xl bg-gradient-to-br from-white via-slate-50 to-white p-6">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-2xl font-bold text-amber-600">
+            <AlertCircle className="h-6 w-6" />
+            Daily Hours Limit Exceeded
+          </DialogTitle>
+        </DialogHeader>
+        <div className="mt-4 space-y-4">
+          <p className="text-slate-600">
+            Adding this action would exceed the recommended daily limit of {dailyHourLimit} hours.
+          </p>
+          <div className="flex items-center gap-2 p-4 bg-amber-50 rounded-xl">
+            <AlertCircle className="h-5 w-5 text-amber-600" />
+            <p className="text-sm text-amber-700">
+              Consider spreading your tasks across multiple days for better work-life balance.
+            </p>
+          </div>
+        </div>
+        <DialogFooter className="mt-6 space-x-2">
+          <Button
+            onClick={() => setShowLimitWarning(false)}
+            variant="outline"
+            className="rounded-xl"
+            disabled={isAddingAction}
+          >
+            Adjust Duration
+          </Button>
+          <Button
+            onClick={handleAddAnyway}
+            className="bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl"
+            disabled={isAddingAction}
+          >
+            {isAddingAction ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Adding...
+              </div>
+            ) : (
+              'Add Anyway'
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 
   if (!task) {
     return (
@@ -373,9 +463,17 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
           <DialogFooter className="mt-8">
             <Button
               onClick={handleAddAction}
+              disabled={!newAction.title || isAddingAction}
               className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
             >
-              Add Action
+              {isAddingAction ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Adding...
+                </div>
+              ) : (
+                'Add Action'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

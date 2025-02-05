@@ -5,7 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-export const getFriendRequestBySenderAndRecieversId = async ({senderId,recieverId}: {senderId: number, recieverId: number}):Promise<FriendRequest | null> => {
+export const getFriendRequestBySenderAndRecieversId = async ({senderId,recieverId}: {senderId: string, recieverId: string}):Promise<FriendRequest | null> => {
     const cookieStore = await cookies();
     const {userId} = await auth();
     const supabase = createServerClient(

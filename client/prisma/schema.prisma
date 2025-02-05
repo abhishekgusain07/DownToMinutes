@@ -114,6 +114,7 @@ model user {
   tags             tag[]
   accountability_settings AccountabilitySettings[]
   notifications     Notification[]
+  action_items     ActionItem[]
   
   // New relations for accountability feature
   sent_friend_requests     FriendRequest[] @relation("SentFriendRequests")
@@ -391,11 +392,14 @@ model ActionItem {
   task_id     String           // Direct link to task for quick queries
   day         day              @relation(fields: [day_id], references: [id])
   day_id      String
+  user        user             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id     String
   created_at  DateTime         @default(now())
   updated_at  DateTime         @updatedAt
 
   @@index([date])
   @@index([plan_id])
+  @@index([user_id])
 }
 
 enum ActionItemStatus {
