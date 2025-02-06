@@ -147,7 +147,10 @@ const AllTasksOfGoal = ({ goalId }: AllTasksOfGoalProps) => {
                                         <div className="flex space-x-2 mt-2">
                                             <Button variant="default" size="sm"
                                                 onClick={() => {
-                                                    router.push(`/app/goals/${goalId}/tasks/${task.id}/plan`)
+                                                    task.action_plan_id ?
+                                                    router.push(`/app/goals/${goalId}/tasks/${task.id}/view/${task.action_plan_id}`)
+                                                    :
+                                                    router.push(`/app/goals/${goalId}/tasks/${task.id}/create-plan`)
                                                 }}
                                             >
                                                 {
@@ -157,7 +160,7 @@ const AllTasksOfGoal = ({ goalId }: AllTasksOfGoalProps) => {
                                             {
                                                 task.action_plan_id &&  <Button variant="default" size="sm"
                                                 onClick={() => {
-                                                    router.push(`/app/goals/${goalId}/tasks/${task.id}/view`)
+                                                    router.push(`/app/goals/${goalId}/tasks/${task.id}/view/${task.action_plan_id}`)
                                                 }}
                                             >
                                                 {
