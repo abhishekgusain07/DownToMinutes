@@ -15,6 +15,9 @@ import { uid } from 'uid';
 import { generateTaskActions } from '@/utils/ai/generateTaskAction';
 import { getActionItemForDate } from '@/utils/data/actionItem/getActionItemForDate';
 import { getUserDailyHourLimit } from '@/utils/data/user/getUserDailyHourLimit';
+import { createNewTaskActionPlan } from '@/utils/data/taskActionPlan/createNewTaskActionPlan';
+import { toast } from 'sonner';
+import { createActionItem } from '@/utils/data/actionItem/createActionItem';
 
 interface CalendarViewProps {
   goalId: string;
@@ -43,13 +46,14 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newAction, setNewAction] = useState<NewAction>({ title: '', duration: 30 });
-  const [generatingAiActions, setGeneratingAiActions] = useState(false);
-  const [showLimitWarning, setShowLimitWarning] = useState(false);
+  const [generatingAiActions, setGeneratingAiActions] = useState<boolean>(false);
+  const [showLimitWarning, setShowLimitWarning] = useState<boolean>(false);
   const [dailyHourLimit, setDailyHourLimit] = useState<number>(8); // Default value until loaded
   const [days, setDays] = useState<Date[]>([]);
   const [dailyHours, setDailyHours] = useState<DailyHours>({});
   const [isLoadingHours, setIsLoadingHours] = useState<{[key: string]: boolean}>({});
-  const [isAddingAction, setIsAddingAction] = useState(false);
+  const [isAddingAction, setIsAddingAction] = useState<boolean>(false);
+  const [savingPlan, setSavingPlan] = useState<boolean>(false)
 
   useEffect(() => {
     const loadDailyHourLimit = async () => {
@@ -196,8 +200,26 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
   }
 
   const handleSaveAll = async () => {
-    // TODO: Save actions to the database
-    console.log('Saving actions:', actions);
+    setSavingPlan(true);
+    try{
+      const newActionPlan = await createNewTaskActionPlan({taskId, start_date: new Date(), end_date: task?.due_date!})
+      if(!newActionPlan){
+        toast.error("Failed to create new action plan");
+        return;
+      }
+      const actionItems: ActionItem[] = await Promise.all(
+        actions.map(action => createActionItem(
+          {taskId, date: action.date, taskActionPlanId: newActionPlan.id, actionItem: action}
+        ))
+      )
+      console.log("actionItems ✅", actionItems)
+      toast.success("Saved all actions");
+    }catch(error) {
+      console.error("Error saving actions:", error);
+      toast.error("Failed to save actions");
+    }finally {
+      setSavingPlan(false);
+    }
   };
 
   const getActionsForDate = (date: Date) => {
@@ -320,8 +342,12 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
         <Button 
           onClick={handleSaveAll}
           className="w-full md:w-auto bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
+          disabled={savingPlan}
         >
-          Save Plan
+          {savingPlan && "Saving "}
+          {
+            savingPlan ? <Loader2 className='animate-spin size-2 ml-2' /> : 'Save Plan'
+          }
         </Button>
         <Button 
           onClick={generateAiPlan}
@@ -339,9 +365,9 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
 
       <div className="grid grid-cols-1 md:grid-cols-7 gap-4 md:gap-6 overflow-x-auto pb-4">
         <div className="hidden md:grid md:grid-cols-7 md:col-span-7 gap-4 mb-4">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-            <div key={day} className="text-center font-semibold text-slate-600 py-2">
-              {day}
+          {days.slice(0, 7).map((date, index) => (
+            <div key={index} className="text-center text-md font-bold text-gray-900">
+              {format(date, 'EEE')}
             </div>
           ))}
         </div>
