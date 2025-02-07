@@ -382,8 +382,8 @@ model TaskActionPlan {
 
 model ActionItem {
   id          String           @id @default(cuid())
-  plan        TaskActionPlan   @relation(fields: [plan_id], references: [id])
-  plan_id     String
+  plan        TaskActionPlan?   @relation(fields: [plan_id], references: [id])
+  plan_id     String?
   date        DateTime         // Action date (Feb 5)
   duration    Int              // Minutes (e.g., 60 = 1 hour)
   description String           // "Learn Next.js Routing"

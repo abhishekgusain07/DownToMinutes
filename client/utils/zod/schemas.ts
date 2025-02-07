@@ -7,6 +7,7 @@ export const actionFormSchema = z.object({
     task_id: z.string().min(1, 'Task is required'),
     day_id: z.string().min(1, 'Day is required').optional(),
     notes: z.string().optional(),
+    plan_id: z.string().optional(),
 });
 
 export const subgoalFormSchema = z.object({

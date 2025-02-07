@@ -9,7 +9,6 @@ import { uid } from "uid";
 import { revalidatePath } from "next/cache";
 import { actionFormSchema } from "@/utils/zod/schemas";
 
-
 // Format function to match Supabase datetime format
 function formatDateTime(date: Date) {
     return date.getFullYear() + '-' +
@@ -45,85 +44,60 @@ export const createPlan = async ({data}:{data: z.infer<typeof actionFormSchema>}
             throw new Error("User not found");
         }
         const now = new Date();
-
-    const today = new Date();
-    
-    
-
-    // Set to today 12:01 AM
-    const today_12_01_AM = new Date(today);
-    today_12_01_AM.setHours(0, 1, 0, 0);
-
-    // Set to today 11:59 PM
-    const today_11_59_PM = new Date(today);
-    today_11_59_PM.setHours(23, 59, 59, 999);
-
-    const startTime = formatDateTime(today_12_01_AM);
-    const endTime = formatDateTime(today_11_59_PM);
-
-    // First, try to find an existing day record for today
-    const { data: existingDay } = await supabase
-        .from("day")
-        .select("id")
-        .eq("user_id", userData.id)
-        .gte("date", startTime)
-        .lt("date", endTime)
-        .single();  
-
-    let dayId;
-
-    if (existingDay) {
-        // Use existing day
-        dayId = existingDay.id;
-    } else {
-        // Create new day record
-        const { data: newDay, error: dayError } = await supabase
-            .from("day")
-            .insert([
-                {
-                    id: uid(32),
-                    date: today.toISOString(),
-                    user_id: userData.id,
-                    created_at: now.toISOString(),
-                    updated_at: now.toISOString(),
-                },
-            ])
-            .select()
+        const today = new Date();
+        
+        // Get or create day for today
+        const { data: existingDay, error: dayError } = await supabase
+            .from('day')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('date', today.toISOString().split('T')[0])
             .single();
 
-        if (dayError || !newDay) {
-            throw new Error("Failed to create day record");
+        if (dayError && dayError.code !== 'PGRST116') {
+            throw dayError;
         }
 
-        dayId = newDay.id;
-    }
-        console.log("here ✅ ✅ ✅ ✅✅ vv ✅✅✅")
-        //create plan entry
-        const {data: actionData, error: actionError} = await supabase
-        .from("Action")
-        .insert([
-            {
-                id: uid(32),
-                day_id: dayId,
-                task_id: data.task_id,
-                title: data.title,
-                duration: data.duration,
-                completed: false,
-                created_at: now.toISOString(),
-                updated_at: now.toISOString(),
-                notes: data.notes ?? ""
-            }
-        ])
-        .select()
-        .single();
-        if(actionError || !actionData){
-            console.log(actionError)
-            throw new Error("Failed to create plan");
-        }   
-        revalidatePath("/app/plans");
-        return actionData
+        let dayId;
+        if (!existingDay) {
+            const { data: newDay, error: createDayError } = await supabase
+                .from('day')
+                .insert([
+                    {
+                        user_id: userId,
+                        date: today.toISOString().split('T')[0],
+                    }
+                ])
+                .select()
+                .single();
 
+            if (createDayError) throw createDayError;
+            dayId = newDay.id;
+        } else {
+            dayId = existingDay.id;
+        }
+
+        // Create action item
+        const actionItemData = {
+            user_id: userId,
+            task_id: data.task_id,
+            day_id: dayId,
+            description: data.title,
+            duration: data.duration,
+            date: formatDateTime(now),
+            ...(data.plan_id && { plan_id: data.plan_id }) // Only include plan_id if it exists
+        };
+
+        const { error: actionError } = await supabase
+            .from('ActionItem')
+            .insert([actionItemData]);
+
+        if (actionError) throw actionError;
+
+        revalidatePath('/app/plans');
+        return { success: true };
     } catch (error) {
+        console.error('Error creating plan:', error);
         throw error;
     }
 }

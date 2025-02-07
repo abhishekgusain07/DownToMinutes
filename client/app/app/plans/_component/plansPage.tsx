@@ -3,7 +3,7 @@
 import { usePlanDateStore } from '@/store/usePlanDateStore';
 import { getPlansForTheDay } from '@/utils/data/plans/getPlansForTheDay';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dotted-dialog"
-import { Action, Plan, Task } from '@/utils/types';
+import { Action, ActionItem, Plan, Task } from '@/utils/types';
 import { format, isSameDay } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -23,14 +23,15 @@ import { useRouter } from 'next/navigation';
 import ShowSuggestAiPlans from './showSuggestAiPlans';
 import { getAllTaskOfUser } from '@/utils/data/task/getAllTaskOfUser';
 import { generateDailyActions } from '@/utils/ai/generatePlans';
+import { getActionItemForDate } from '@/utils/data/actionItem/getActionItemForDate';
 
 
 const PlansPage = () => {
     const { selectedDate } = usePlanDateStore();
-    const [actions, setActions] = useState<Action[]| null>(null);
+    const [actions, setActions] = useState<ActionItem[]| null>(null);
     const [open, setOpen] = useState<boolean>(false);
     const [aiPlansloading, setAiPlansLoading] = useState<boolean>(false);
-    const [aiPlans, setAiPlans] = useState<Action[]|null>(null);
+    const [aiPlans, setAiPlans] = useState<ActionItem[]|null>(null);
     const [plansLoading, setPlansLoading] = useState<boolean>(false);
     var isToday = isSameDay(selectedDate, new Date());
     var isPast = selectedDate < new Date(new Date().setHours(0, 0, 0, 0));
@@ -38,30 +39,32 @@ const PlansPage = () => {
     const [tasksLoading, setTasksLoading] = useState<boolean>(false);
 
     const router = useRouter();
-    const generateAIPlans = async () => {
-        if(tasksLoading || tasks === null || tasks.length === 0) {
-            toast.error("cannot generate ai plans for the day");
-            return;
-        }
-        try {
-            setAiPlansLoading(true);
-            const aiGenPlans: Action[] | null = await generateDailyActions({tasks: tasks});
-            setAiPlans(aiGenPlans);
-            router.refresh();
-            toast.success("fetched ai plans for the day");
-        } catch (e) {
-            toast.error("cannot fetch ai plans for the day");
-        } finally {
-            setAiPlansLoading(false);
-        }
-    }
+    // const generateAIPlans = async () => {
+    //     //TODO: change prompt to generate actionItem instead of simple action
+    //     if(tasksLoading || tasks === null || tasks.length === 0) {
+    //         toast.error("cannot generate ai plans for the day");
+    //         return;
+    //     }
+    //     try {
+    //         setAiPlansLoading(true);
+    //         const aiGenPlans: Action[] | null = await generateDailyActions({tasks: tasks});
+    //         setAiPlans(aiGenPlans);
+    //         router.refresh();
+    //         toast.success("fetched ai plans for the day");
+    //     } catch (e) {
+    //         toast.error("cannot fetch ai plans for the day");
+    //     } finally {
+    //         setAiPlansLoading(false);
+    //     }
+    // }
     useEffect(() => {
         isToday = isSameDay(selectedDate, new Date());
         isPast = selectedDate < new Date(new Date().setHours(0, 0, 0, 0));
-        const fetchPlansForTheDay = async() => {
+        const fetchActionItemsForTheDay = async() => {
             try {
                 setPlansLoading(true);
-                const data: Action[] | null = await getPlansForTheDay({date: selectedDate});
+                const data: ActionItem[] | null = await 
+                getActionItemForDate({date:selectedDate})
                 setActions(data);
                 router.refresh();
                 toast.success("fetched actions for the day");
@@ -84,13 +87,13 @@ const PlansPage = () => {
                 setTasksLoading(false);
             }
         }
-        fetchPlansForTheDay();
+        fetchActionItemsForTheDay();
         fetchAllTaskOfUser();
     }, [selectedDate]);
     const handleSuccess = () => {
         setOpen(false);
     };
-    const updatePlans = async (newActions: (Action[] | null)) => {
+    const updatePlans = async (newActions: (ActionItem[] | null)) => {
         setActions(newActions);
     };
 
@@ -157,7 +160,7 @@ const PlansPage = () => {
                                             {
                                                 actions.map((action) => (
                                                     <div key={action.id}>
-                                                        <div>{action.title}</div>
+                                                        <div>{action.description}</div>
                                                     </div>
                                                 ))
                                             }
@@ -168,7 +171,7 @@ const PlansPage = () => {
                                 }
                             </div>
                         )}
-                        <Button onClick={generateAIPlans} disabled={aiPlansloading}> Generate AI Actions</Button>
+                        <Button onClick={() => {}} disabled={aiPlansloading}> Generate AI Actions</Button>
                     </div>
                     <div className='mt-4'>
                     {
@@ -177,7 +180,7 @@ const PlansPage = () => {
                         ) : (
                             aiPlans && aiPlans.length > 0 ? (
                                 <div>
-                                    <ShowSuggestAiPlans actions={aiPlans} />
+                                    {/* <ShowSuggestAiPlans actions={aiPlans} /> */}
                                 </div>
                             ) : (
                                 <div>No AI plans found for the day</div>
@@ -199,7 +202,7 @@ const PlansForm = ({
     tasks,
 }: {
     onSuccess: () => void,
-    updatePlans: (newPlans: Action[]|null) => void,
+    updatePlans: (newPlans: ActionItem[]|null) => void,
     selectedDate: Date,
     tasks: Task[] | null,
 }) => {
@@ -220,7 +223,7 @@ const PlansForm = ({
             await createPlan({data: values});
             form.reset();
             onSuccess();
-            const data = await getPlansForTheDay({date: selectedDate});
+            const data = await getActionItemForDate({date: selectedDate});
             updatePlans(data);
             router.refresh();
             toast.success("Action created successfully!");
