@@ -7,7 +7,7 @@ import { Loader2, Plus, X, AlertCircle, Calendar as CalendarIcon, Pencil } from 
 import { useEffect, useState } from "react";
 import { format, eachDayOfInterval, startOfToday, isSameDay, isToday } from 'date-fns';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dotted-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";

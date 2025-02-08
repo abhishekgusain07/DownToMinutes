@@ -34,6 +34,8 @@ export const getAllTaskOfUser = async (): Promise<Task[] | null> => {
       .select("*")
       .eq("user_id", userData.id)
       .order("created_at", { ascending: false })
+    
+    
     if(error) {
       throw new Error("Error fetching task");
     }

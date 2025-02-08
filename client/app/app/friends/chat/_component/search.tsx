@@ -9,7 +9,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger
-  } from "@/components/ui/dialog";
+  } from "@/components/ui/dotted-dialog";
 
 import {api} from "@/convex/_generated/api";
 import debounce from 'lodash/debounce';

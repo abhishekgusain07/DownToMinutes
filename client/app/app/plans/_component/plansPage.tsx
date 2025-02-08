@@ -3,7 +3,7 @@
 import { usePlanDateStore } from '@/store/usePlanDateStore';
 import { getPlansForTheDay } from '@/utils/data/plans/getPlansForTheDay';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dotted-dialog"
-import { Action, ActionItem, Plan, Task } from '@/utils/types';
+import { Action, ActionItem, ActionItemStatus, Plan, Task, TaskActionPlan } from '@/utils/types';
 import { format, isSameDay } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -17,13 +17,17 @@ import { z } from 'zod';
 import { addHours } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
-import { actionFormSchema } from '@/utils/zod/schemas';
+import { actionItemFormSchema } from '@/utils/zod/schemas';
 import { createPlan } from '@/utils/data/plans/createPlan';
 import { useRouter } from 'next/navigation';
 import ShowSuggestAiPlans from './showSuggestAiPlans';
 import { getAllTaskOfUser } from '@/utils/data/task/getAllTaskOfUser';
 import { generateDailyActions } from '@/utils/ai/generatePlans';
 import { getActionItemForDate } from '@/utils/data/actionItem/getActionItemForDate';
+import { getLatestTaskActionPlanForTask } from '@/utils/data/taskActionPlan/getLatestTaskActionPlanForTask';
+import { createActionItem } from '@/utils/data/actionItem/createActionItem';
+import { uid } from 'uid';
+import { Separator } from '@/components/ui/separator';
 
 
 const PlansPage = () => {
@@ -35,7 +39,7 @@ const PlansPage = () => {
     const [plansLoading, setPlansLoading] = useState<boolean>(false);
     var isToday = isSameDay(selectedDate, new Date());
     var isPast = selectedDate < new Date(new Date().setHours(0, 0, 0, 0));
-    const [tasks, setTasks] = useState<Task[] | null>(null)
+    const [tasks, setTasks] = useState<{task: Task, plan_id: string | null}[] | null>(null)
     const [tasksLoading, setTasksLoading] = useState<boolean>(false);
 
     const router = useRouter();
@@ -78,7 +82,17 @@ const PlansPage = () => {
             try {
                 setTasksLoading(true);
                 const data: Task[] | null = await getAllTaskOfUser();
-                setTasks(data);
+                if(data) {
+                    const dataWithTaskActionPlans = await Promise.all(data.map(async (task) => {
+                        const latestTaskActionPlanId = await getLatestTaskActionPlanForTask({taskId: task.id});
+                        return {
+                            task,
+                            plan_id: latestTaskActionPlanId,
+                        }
+                    }));
+                    setTasks(dataWithTaskActionPlans);
+
+                }else setTasks(null);
                 router.refresh();
                 toast.success("fetched tasks");
             } catch (e) {
@@ -92,6 +106,8 @@ const PlansPage = () => {
     }, [selectedDate]);
     const handleSuccess = () => {
         setOpen(false);
+        updatePlans(null);
+        toast.success('Plan created successfully');
     };
     const updatePlans = async (newActions: (ActionItem[] | null)) => {
         setActions(newActions);
@@ -116,7 +132,7 @@ const PlansPage = () => {
                         </p>
                     </div>
                     
-                    <Dialog>
+                    <Dialog open={open} onOpenChange={setOpen}>
                         <DialogTrigger asChild>
                             <Button 
                                 className="w-full bg-gray-800 text-white hover:bg-gray-700 transition-colors"
@@ -133,10 +149,7 @@ const PlansPage = () => {
                                 </DialogDescription>
                             </DialogHeader>
                             <PlansForm
-                                onSuccess={() => {
-                                    updatePlans(null);
-                                    toast.success('Plan created successfully');
-                                }}
+                                onSuccess={handleSuccess}
                                 updatePlans={updatePlans}
                                 selectedDate={selectedDate}
                                 tasks={tasks}
@@ -204,23 +217,46 @@ const PlansForm = ({
     onSuccess: () => void,
     updatePlans: (newPlans: ActionItem[]|null) => void,
     selectedDate: Date,
-    tasks: Task[] | null,
+    tasks: {task: Task, plan_id: string | null}[] | null,
 }) => {
+    console.log("Tasks ✅", tasks);
     const router = useRouter();
-    const form = useForm<z.infer<typeof actionFormSchema>>({
-        resolver: zodResolver(actionFormSchema),
+    const form = useForm<z.infer<typeof actionItemFormSchema>>({
+        resolver: zodResolver(actionItemFormSchema),
         defaultValues: {
-            title: "",
+            description: "",
             duration: 30,
-            completed: false,
+            status: ActionItemStatus.PENDING,
             task_id: "",
-            notes: "",
+            plan_id: "",
+            date: selectedDate,
         }
     });
 
-    const handleSubmit = async (values: z.infer<typeof actionFormSchema>) => {
+    const handleSubmit = async (values: z.infer<typeof actionItemFormSchema>) => {
         try {
-            await createPlan({data: values});
+            console.log("Form submission started");
+            console.log("Form values:", values);
+            console.log("Form errors:", form.formState.errors);
+            
+            if (!values.description) {
+                console.error("Description is required");
+                return;
+            }
+            
+            await createActionItem({
+                taskId: values.task_id === "standalone" ? "" : values.task_id,
+                date: values.date,
+                taskActionPlanId: values.plan_id == null ? "" : values.plan_id,
+                actionItem: {
+                    id: uid(32),
+                    date: values.date,
+                    description: values.description,
+                    duration: values.duration,
+                },
+                status: values.status
+            });
+            console.log("Action item created successfully");
             form.reset();
             onSuccess();
             const data = await getActionItemForDate({date: selectedDate});
@@ -228,100 +264,136 @@ const PlansForm = ({
             router.refresh();
             toast.success("Action created successfully!");
         } catch (error) {
-            console.error(error);
+            console.error("Form submission error:", error);
             toast.error("Failed to create action");
         }
     };
 
+    useEffect(() => {
+        const subscription = form.watch((value, { name, type }) => 
+            console.log("Form field changed:", { name, type, value })
+        );
+        return () => subscription.unsubscribe();
+    }, [form.watch]);
+
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-
-                <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Title</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Enter action title" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
-                <FormField
-                    control={form.control}
-                    name="duration"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Duration (minutes)</FormLabel>
-                            <FormControl>
-                                <Input
-                                    type="number"
-                                    min={1}
-                                    placeholder="Enter duration in minutes"
-                                    {...field}
-                                    onChange={e => field.onChange(parseInt(e.target.value))}
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="task_id"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Select Task</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <div className="space-y-4">
+                    <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Description</FormLabel>
                                 <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a task" />
-                                    </SelectTrigger>
+                                    <Input placeholder="Enter action description" {...field} />
                                 </FormControl>
-                                <SelectContent>
-                                    {tasks && tasks.map((task) => (
-                                        <SelectItem key={task.id} value={task.id}>
-                                            {task.title}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Notes (Optional)</FormLabel>
-                            <FormControl>
-                                <Textarea
-                                    placeholder="Add any additional notes"
-                                    className="resize-none"
-                                    {...field}
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-                <Button type="submit" disabled={form.formState.isSubmitting} className="w-full">
-                    {form.formState.isSubmitting ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Creating...
-                        </>
-                    ) : (
-                        'Create Action'
-                    )}
-                </Button>
+                    <FormField
+                        control={form.control}
+                        name="duration"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Duration (minutes)</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        type="number"
+                                        min={1}
+                                        placeholder="Enter duration in minutes"
+                                        {...field}
+                                        onChange={e => field.onChange(parseInt(e.target.value))}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="task_id"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Select Task</FormLabel>
+                                <Select 
+                                    onValueChange={(value) => {
+                                        field.onChange(value); // Set the actual selected value
+                                        // Find the selected task and set its plan_id
+                                        if (value !== "standalone" && tasks) {
+                                            const selectedTask = tasks.find(t => t.task.id === value);
+                                            form.setValue('plan_id', selectedTask?.plan_id || '');
+                                        } else {
+                                            form.setValue('plan_id', '');
+                                        }
+                                    }} 
+                                    defaultValue={field.value}
+                                >
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a task" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {tasks && tasks.map((task) => (
+                                            <SelectItem key={task.task.id} value={task.task.id}>
+                                                {task.task.title}
+                                            </SelectItem>
+                                        ))}
+                                        <Separator />
+                                        <SelectItem key="standalone" value="standalone">
+                                            Standalone task
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+
+                    <FormField
+                        control={form.control}
+                        name="status"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Status</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a status" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem key={ActionItemStatus.PENDING} value={ActionItemStatus.PENDING}>
+                                            Not started
+                                        </SelectItem>
+                                        <SelectItem key={ActionItemStatus.COMPLETED} value={ActionItemStatus.COMPLETED}>
+                                            Completed
+                                        </SelectItem>
+                                        <SelectItem key={ActionItemStatus.SKIPPED} value={ActionItemStatus.SKIPPED}>
+                                            Skipped
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <Button type="submit" disabled={form.formState.isSubmitting} className="w-full">
+                        {form.formState.isSubmitting ? (
+                            <>
+                               <p>Creating</p> <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            </>
+                        ) : (
+                            'Create Action'
+                        )}
+                    </Button>
+                </div>
             </form>
         </Form>
     );

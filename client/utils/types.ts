@@ -472,7 +472,7 @@ export interface TaskActionPlan {
 
 export interface ActionItem {
   id: string;
-  plan_id: string;
+  plan_id ?: string;
   date: Date;
   duration: number;
   description: string;
@@ -482,6 +482,7 @@ export interface ActionItem {
   created_at: Date;
   updated_at: Date;
 }
+
 export interface PartialActionItem {
   id: string;
   date: Date;

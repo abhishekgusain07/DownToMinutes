@@ -7,7 +7,7 @@ import { User } from "@/utils/types";
 import { getUser } from "../user/getUser";
 import { uid } from "uid";
 import { revalidatePath } from "next/cache";
-import { actionFormSchema } from "@/utils/zod/schemas";
+import { actionItemFormSchema } from "@/utils/zod/schemas";
 
 // Format function to match Supabase datetime format
 function formatDateTime(date: Date) {
@@ -20,7 +20,7 @@ function formatDateTime(date: Date) {
         String(date.getMilliseconds()).slice(0, 1);
 }
 
-export const createPlan = async ({data}:{data: z.infer<typeof actionFormSchema>}) => {
+export const createPlan = async ({data}:{data: z.infer<typeof actionItemFormSchema>}) => {
     const cookieStore = await cookies();
     const { userId } = await auth();
     
@@ -43,15 +43,14 @@ export const createPlan = async ({data}:{data: z.infer<typeof actionFormSchema>}
         if (!userData) {
             throw new Error("User not found");
         }
-        const now = new Date();
-        const today = new Date();
+        const date = data.date;
         
         // Get or create day for today
         const { data: existingDay, error: dayError } = await supabase
             .from('day')
             .select('*')
             .eq('user_id', userId)
-            .eq('date', today.toISOString().split('T')[0])
+            .eq('date', date.toISOString().split('T')[0])
             .single();
 
         if (dayError && dayError.code !== 'PGRST116') {
@@ -65,7 +64,7 @@ export const createPlan = async ({data}:{data: z.infer<typeof actionFormSchema>}
                 .insert([
                     {
                         user_id: userId,
-                        date: today.toISOString().split('T')[0],
+                        date: date.toISOString().split('T')[0],
                     }
                 ])
                 .select()
@@ -82,9 +81,11 @@ export const createPlan = async ({data}:{data: z.infer<typeof actionFormSchema>}
             user_id: userId,
             task_id: data.task_id,
             day_id: dayId,
-            description: data.title,
+            description: data.description,
             duration: data.duration,
-            date: formatDateTime(now),
+            date: formatDateTime(date),
+            created_at: new Date(),
+            updated_at: new Date(),
             ...(data.plan_id && { plan_id: data.plan_id }) // Only include plan_id if it exists
         };
 

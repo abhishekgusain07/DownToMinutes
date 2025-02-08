@@ -7,6 +7,7 @@ import { GeistSans } from 'geist/font/sans'
 import type { Metadata } from 'next'
 import './globals.css'
 import { ConvexClientProvider } from '@/components/providers/convexClient-provider'
+import Script from 'next/script'
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://abhishekgusain.vercel.app"),
@@ -33,6 +34,7 @@ export default function RootLayout({
             href="https://utfs.io/f/69a12ab1-4d57-4913-90f9-38c6aca6c373-1txg2.png"
             as="image"
           />
+          <Script src="https://unpkg.com/react-scan/dist/auto.global.js" />
         </head>
         <body className={GeistSans.className} >
           <Provider>

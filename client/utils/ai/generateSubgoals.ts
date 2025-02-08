@@ -34,7 +34,7 @@ export async function generateSubgoalSuggestions({
         if (!goal) {
             throw new Error("Goal not found");
         }
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         const prompt = `As an AI assistant, analyze this goal and suggest realistic, actionable subgoals.
         Goal Title: ${goal.title}

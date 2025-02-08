@@ -2,7 +2,7 @@
 
 import ModeToggle from '@/components/mode-toggle'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogClose } from '@/components/ui/dialog'
+import { Dialog, DialogClose } from '@/components/ui/dotted-dialog'
 import { Separator } from '@/components/ui/separator'
 import { SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { UserProfile } from '@/components/user-profile'

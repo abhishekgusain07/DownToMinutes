@@ -1,13 +1,17 @@
 import { z } from "zod";
+import { ActionItemStatus } from "../types";
 
-export const actionFormSchema = z.object({
-    title: z.string().min(1, 'Title is required'),
-    duration: z.number().min(1, 'Duration must be at least 1 minute').int(),
-    completed: z.boolean().optional(),
-    task_id: z.string().min(1, 'Task is required'),
-    day_id: z.string().min(1, 'Day is required').optional(),
-    notes: z.string().optional(),
+export const actionItemFormSchema = z.object({
     plan_id: z.string().optional(),
+    date: z.date({
+      required_error: 'Date is required',
+    }),
+    duration: z.number().min(1, 'Duration must be at least 1 minute').int(),
+    description: z.string().min(1, 'Description is required'),
+    status: z.nativeEnum(ActionItemStatus),
+    task_id: z.string().refine((val) => val === 'standalone' || val.length > 0, {
+        message: 'Task is required'
+    }),
 });
 
 export const subgoalFormSchema = z.object({

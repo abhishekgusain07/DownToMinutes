@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { PartialActionItem, Task } from '@/utils/types';
 import { getTaskById } from '@/utils/data/task/getTaskById';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dotted-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { format, eachDayOfInterval, startOfToday, isSameDay, isToday } from 'date-fns';

@@ -30,15 +30,30 @@ export const getActionItemForDate = async({date}:{date: Date}):Promise<ActionIte
             throw new Error("user data not found")
         }
 
-        // Format the date to ISO string and extract just the date part
-        const formattedDate = format(date, 'yyyy-MM-dd');
+        // Get start and end of the day in ISO format
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
 
         const {data, error} = await supabase
-        .from("ActionItem")
-        .select("*")
-        .eq("user_id", userData.id)
-        .eq("date", formattedDate)
-        .order("created_at", {ascending: false});
+            .from("ActionItem")
+            .select(`
+                *,
+                task:task (
+                    id,
+                    title,
+                    description,
+                    status,
+                    estimated_hours,
+                    actual_hours,
+                    due_date
+                )
+            `)
+            .eq("user_id", userData.id)
+            .gte("date", startOfDay.toISOString())
+            .lt("date", endOfDay.toISOString())
+            .order("created_at", {ascending: false});
 
         if(error){
             console.error("Error fetching action items:", error);
