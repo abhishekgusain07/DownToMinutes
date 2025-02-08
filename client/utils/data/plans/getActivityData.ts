@@ -1,8 +1,10 @@
 "use server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { format } from "date-fns";
+import { format, startOfDay, endOfDay } from "date-fns";
 import { auth } from "@clerk/nextjs/server";
+import { getUser } from "../user/getUser";
+import { User } from "@/utils/types";
 
 export const getActivityData = async ():Promise<{ date: string; count: number }[]> => {
     const cookieStore = await cookies();
@@ -21,33 +23,63 @@ export const getActivityData = async ():Promise<{ date: string; count: number }[
     );
 
     try {
-        const { data: plans, error } = await supabase
-                .from('Action')
-                .select('created_at')
-                .gte('created_at', format(new Date(new Date().setFullYear(new Date().getFullYear() - 1)), 'yyyy-MM-dd'))
-                .order('created_at', { ascending: true });
+        if(!userId){
+            throw new Error("User not authenticated");
+        }
+        const userData: User | null = await getUser(userId!);
+        if (!userData) {
+            throw new Error("User not found");
+        }
+        // Get the date range
+        const today = new Date();
+        const startOfToday = startOfDay(today);
+        const startOfYearAgo = startOfDay(new Date(today.setFullYear(today.getFullYear() - 1)));
+        
+        const startDateStr = format(startOfYearAgo, 'yyyy-MM-dd');
+        const endDateStr = format(startOfToday, 'yyyy-MM-dd');
+        
+        console.log('Fetching action items from:', startDateStr, 'to:', endDateStr);
 
-            if (error) {
-                console.error('Error fetching activity data:', error);
-                return [];
-            }
-        // Transform the data into the format needed for the heat map
-        const activityData = plans?.reduce<{ date: string; count: number }[]>((acc, plan) => {
-            const date = format(new Date(plan.created_at), 'yyyy/MM/dd');
-            const existingDay = acc.find(d => d.date === date);
+        // Get all action items from the last year
+        const { data: actionItems, error } = await supabase
+            .from('ActionItem')
+            .select('date')
+            .eq('user_id', userData.id)
+            .gte('date', startDateStr)
+            .lte('date', endDateStr);
 
-            if (existingDay) {
-                existingDay.count += 1;
-            } else {
-                acc.push({ date, count: 1 });
-            }
+        if (error) {
+            console.error('Error fetching activity data:', error);
+            return [];
+        }
 
-            return acc;
-        }, []) || [];
+        if (!actionItems?.length) {
+            console.log('No action items found');
+            return [];
+        }
+
+        console.log('Found action items:', actionItems);
+
+        // Group by date and count occurrences
+        const dateMap = new Map<string, number>();
+        
+        actionItems.forEach(item => {
+            // Ensure we're using the date part only
+            const itemDate = startOfDay(new Date(item.date));
+            const dateKey = format(itemDate, 'yyyy/MM/dd');
+            dateMap.set(dateKey, (dateMap.get(dateKey) || 0) + 1);
+        });
+
+        const activityData = Array.from(dateMap.entries())
+            .map(([date, count]) => ({
+                date,
+                count
+            }))
+            .sort((a, b) => a.date.localeCompare(b.date));
 
         return activityData;
     } catch (error) {
         console.error('Error fetching activity data:', error);
         return [];
     }
-};
+}

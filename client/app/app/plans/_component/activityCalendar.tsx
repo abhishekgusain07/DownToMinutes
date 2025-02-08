@@ -13,7 +13,13 @@ export const ActivityCalendar = ({ data }: ActivityCalendarProps) => {
 
     useEffect(() => {
         if (data) {
-            setValue(data);
+            const validData = data
+                .filter(item => item.count > 0)
+                .map(item => ({
+                    date: format(new Date(item.date), 'yyyy/MM/dd'),
+                    count: item.count
+                }));
+            setValue(validData);
         } else {
             setValue([]);
         }
@@ -29,6 +35,13 @@ export const ActivityCalendar = ({ data }: ActivityCalendarProps) => {
                 rectSize={12}
                 space={4}
                 legendCellSize={0}
+                panelColors={{
+                    0: '#EBEDF0',
+                    4: '#9BE9A8',
+                    8: '#40C463',
+                    12: '#30A14E',
+                    32: '#216E39',
+                }}
                 rectProps={{
                     rx: 2,
                 }}

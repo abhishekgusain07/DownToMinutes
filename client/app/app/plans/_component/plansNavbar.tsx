@@ -33,7 +33,6 @@ const PlansNavbar = () => {
                 } else {
                     acc.push({ date, count: plan.count });
                 }
-
                 return acc;
             }, []) || [];
                 if (isMounted) {
