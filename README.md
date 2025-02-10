@@ -28,7 +28,7 @@ A personal project to track and celebrate daily achievements. This tracker helps
 | 2025-01-19 | Report Generation | :hourglass: | Pending |
 | 2025-01-19 | progress page ( progress in individual goals ) | :hourglass: | Pending |
 
-
+[] fix activity graph
 
 ### Status Key
 - :white_check_mark: = Completed
