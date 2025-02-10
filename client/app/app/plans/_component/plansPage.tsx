@@ -83,7 +83,9 @@ const PlansPage = () => {
                 setTasksLoading(true);
                 const data: Task[] | null = await getAllTaskOfUser();
                 if(data) {
-                    const dataWithTaskActionPlans = await Promise.all(data.map(async (task) => {
+                    //filter out tasks whose title starts with Standalone
+                    const filteredData = data.filter((task) => !task.title.startsWith('Standalone'));
+                    const dataWithTaskActionPlans = await Promise.all(filteredData.map(async (task) => {
                         const latestTaskActionPlanId = await getLatestTaskActionPlanForTask({taskId: task.id});
                         return {
                             task,
