@@ -28,6 +28,8 @@ import { getLatestTaskActionPlanForTask } from '@/utils/data/taskActionPlan/getL
 import { createActionItem } from '@/utils/data/actionItem/createActionItem';
 import { uid } from 'uid';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from "@/components/ui/checkbox"
+import { updateActionItemStatus } from "@/utils/data/actionItem/updateActionItemStatus" // You'll need to create this function
 
 
 const PlansPage = () => {
@@ -39,8 +41,50 @@ const PlansPage = () => {
     const [plansLoading, setPlansLoading] = useState<boolean>(false);
     var isToday = isSameDay(selectedDate, new Date());
     var isPast = selectedDate < new Date(new Date().setHours(0, 0, 0, 0));
+    const [savingActionItemStatus, setSavingActionItemStatus] = useState<boolean>(false);
     const [tasks, setTasks] = useState<{task: Task, plan_id: string | null}[] | null>(null)
     const [tasksLoading, setTasksLoading] = useState<boolean>(false);
+    const [modifiedActions, setModifiedActions] = useState<Set<string>>(new Set());
+
+    const handleStatusChange = (actionId: string, checked: boolean) => {
+        const newStatus = checked ? ActionItemStatus.COMPLETED : ActionItemStatus.PENDING;
+        setActions(prev => 
+            prev?.map(action => 
+                action.id === actionId 
+                    ? { ...action, status: newStatus }
+                    : action
+            ) ?? null
+        );
+        setModifiedActions(prev => {
+            const newSet = new Set(prev);
+            newSet.add(actionId);
+            return newSet;
+        });
+    };
+
+    const saveChanges = async () => {
+
+        try {
+            setSavingActionItemStatus(true);
+            if (!actions) return;
+            const updates = actions.filter(action => modifiedActions.has(action.id));
+            await Promise.all(
+                updates.map(action => 
+                    updateActionItemStatus({
+                        actionItemId: action.id,
+                        status: action.status
+                    })
+                )
+            );
+            
+            setModifiedActions(new Set());
+            toast.success("Changes saved successfully");
+        } catch (error) {
+            toast.error("Failed to save changes");
+        }finally {
+            setSavingActionItemStatus(false);
+        }
+    };
 
     const router = useRouter();
     // const generateAIPlans = async () => {
@@ -166,24 +210,44 @@ const PlansPage = () => {
                         {isPast ? (
                             <div>View past plans here</div>
                         ) : (
-                            <div>
-                                {
-                                    plansLoading ? (
-                                        <div className='text-muted-foreground'>Loading plans...</div>
-                                    ) : actions && actions.length > 0 ? (
-                                        <div>
-                                            {
-                                                actions.map((action) => (
-                                                    <div key={action.id}>
-                                                        <div>{action.description}</div>
+                            <div className="space-y-4">
+                                {plansLoading ? (
+                                    <div className='text-muted-foreground'>Loading plans...</div>
+                                ) : actions && actions.length > 0 ? (
+                                    <>
+                                        <div className="space-y-2">
+                                            {actions.map((action) => (
+                                                <div key={action.id} className="flex items-center space-x-3 p-3 bg-white rounded-lg shadow-sm">
+                                                    <Checkbox
+                                                        checked={action.status === ActionItemStatus.COMPLETED}
+                                                        onCheckedChange={(checked) => handleStatusChange(action.id, !!checked)}
+                                                    />
+                                                    <div className={`flex-1 ${action.status === ActionItemStatus.COMPLETED ? 'line-through text-gray-500' : ''}`}>
+                                                        <p>{action.description}</p>
+                                                        <p className="text-sm text-gray-500">Duration: {action.duration} minutes</p>
                                                     </div>
-                                                ))
-                                            }
+                                                </div>
+                                            ))}
                                         </div>
-                                    ) : (
-                                        <div>No actions found for the day</div>
-                                    )
-                                }
+                                        {modifiedActions.size > 0 && (
+                                            <Button 
+                                                onClick={saveChanges}
+                                                className="mt-4"
+                                                disabled={savingActionItemStatus}
+                                            >
+                                                {
+                                                    savingActionItemStatus? (
+                                                        <div className='text-muted-foreground'>Saving changes <Loader2 className="animate-spin size-4" /></div>
+                                                    ) : (
+                                                        "Save Changes"
+                                                    )
+                                                }
+                                            </Button>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div>No actions found for the day</div>
+                                )}
                             </div>
                         )}
                         <Button onClick={() => {}} disabled={aiPlansloading}> Generate AI Actions</Button>
