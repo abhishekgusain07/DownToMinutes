@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation"
 import { createGoal } from "@/utils/data/goals/createGoal"
 import { toast } from "sonner"
 import { Goal, Priority, ProgressType } from "@/utils/types"
+import { DialogClose } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
 
 type FormData = {
     title: string
@@ -17,7 +20,7 @@ type FormData = {
     current_progress?: number
 }
 
-const NewGoal = () => {
+const NewGoal = ({onSuccess}:{onSuccess: () => void}) => {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     
@@ -43,8 +46,8 @@ const NewGoal = () => {
                 end_date: new Date(data.end_date),
                 current_progress: Number(data.current_progress) || 0
             })
-            router.push(`/app/goals/${goal?.id}`)
             router.refresh()
+            onSuccess()
             toast.success("Goal created successfully")
         } catch (error) {
             toast.error("Error creating goal")
@@ -54,7 +57,7 @@ const NewGoal = () => {
     }
 
     return (
-        <div className="max-w-2xl mx-auto p-4">
+        <div className="p-4">
             <h1 className="text-2xl font-bold mb-6">Create New Goal</h1>
             
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -145,13 +148,15 @@ const NewGoal = () => {
                     )}
                 </div>
 
-                <button
+                <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 disabled:bg-gray-400"
+                    className="w-full  rounded-md"
+                    variant="default"
                 >
-                    {loading ? "Creating..." : "Create Goal"}
-                </button>
+                    {loading ? "Creating" : "Create Goal"}
+                    {loading && <Loader2 className="ml-2 size-4 animate-spin" />}
+                </Button>
             </form>
         </div>
     )

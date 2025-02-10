@@ -5,7 +5,9 @@ import { currentUser } from "@clerk/nextjs/server";
 import { GoalCard } from "./_components/GoalCard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
-import Link from "next/link";
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dotted-dialog";
+import NewGoal from "./new/page";
+import NewGoalDialog from "./_componenet/NewGoalDialog";
 
 const Goals = async () => {
     const user = await currentUser();
@@ -37,12 +39,7 @@ const Goals = async () => {
         <div className="p-6 space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-semibold">Goals Management</h1>
-                <Button asChild>
-                    <Link href="/app/goals/new" className="flex items-center gap-2">
-                        <Plus className="h-4 w-4" />
-                        Add New Goal
-                    </Link>
-                </Button>
+                <NewGoalDialog />
             </div>
 
             <Tabs defaultValue="all" className="w-full">
@@ -67,7 +64,7 @@ const Goals = async () => {
                             key={goal.id} 
                             goal={{
                                 ...goal,
-                                subgoals: goal.subgoals || [] // Ensure subgoals is never undefined
+                                subgoals: goal.subgoals || []
                             }} 
                         />
                     ))

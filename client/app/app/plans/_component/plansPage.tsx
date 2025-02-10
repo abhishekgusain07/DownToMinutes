@@ -372,7 +372,11 @@ const PlansForm = ({
                                         min={1}
                                         placeholder="Enter duration in minutes"
                                         {...field}
-                                        onChange={e => field.onChange(parseInt(e.target.value))}
+                                        value={field.value || ''}
+                                        onChange={e => {
+                                            const value = e.target.value;
+                                            field.onChange(value === '' ? '' : parseInt(value));
+                                        }}
                                     />
                                 </FormControl>
                                 <FormMessage />
