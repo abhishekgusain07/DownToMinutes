@@ -33,10 +33,11 @@ export const getActivityData = async ():Promise<{ date: string; count: number }[
         // Get the date range
         const today = new Date();
         const startOfToday = startOfDay(today);
-        const startOfYearAgo = startOfDay(new Date(today.setFullYear(today.getFullYear() - 1)));
+        // Change this to get dates from 2025 instead of 2024
+        const startOfYearAgo = startOfDay(new Date(2025, 0, 1)); // Start from beginning of 2025
         
         const startDateStr = format(startOfYearAgo, 'yyyy-MM-dd');
-        const endDateStr = format(startOfToday, 'yyyy-MM-dd');
+        const endDateStr = format(new Date(2025, 11, 31), 'yyyy-MM-dd'); // End at end of 2025
         
         console.log('Fetching action items from:', startDateStr, 'to:', endDateStr);
 
@@ -77,6 +78,7 @@ export const getActivityData = async ():Promise<{ date: string; count: number }[
             }))
             .sort((a, b) => a.date.localeCompare(b.date));
 
+            console.log('Activity data after filtering and shit', activityData);
         return activityData;
     } catch (error) {
         console.error('Error fetching activity data:', error);
