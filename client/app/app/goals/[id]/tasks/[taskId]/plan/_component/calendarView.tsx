@@ -209,7 +209,7 @@ const CalendarView = ({ goalId, taskId }: CalendarViewProps) => {
       }
       const actionItems: ActionItem[] = await Promise.all(
         actions.map(action => createActionItem(
-          {taskId, date: action.date, taskActionPlanId: newActionPlan.id, actionItem: action}
+          {taskId, date: action.date, taskActionPlanId: newActionPlan.id, actionItem: action, goalId: goalId!}
         ))
       )
       console.log("actionItems ✅", actionItems)

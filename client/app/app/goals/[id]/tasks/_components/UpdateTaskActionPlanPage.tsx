@@ -279,7 +279,8 @@ const UpdateTaskActionPlanPage = ({goalId, taskId, planId}: UpdateTaskActionPlan
                         taskId,
                         date: new Date(action.date),
                         taskActionPlanId: taskActionPlan!.id,
-                        actionItem: action
+                        actionItem: action,
+                        goalId: goalId
                     }).catch(err => {
                         console.error(`Failed to create action:`, err);
                         throw err;

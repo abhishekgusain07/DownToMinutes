@@ -7,6 +7,7 @@ import { ActionItem } from "@/utils/types";
 import { auth } from "@clerk/nextjs/server";
 import { format } from 'date-fns';
 import { uid } from "uid";
+import { getGoalIdFromTaskId } from "../task/getGoalIdFromTaskId";
 
 // Format function to match Supabase datetime format
 function formatDateTime(date: Date) {
@@ -26,6 +27,7 @@ interface CreateActionItemProps {
     taskActionPlanId ?: string
     actionItem: (ActionItem|PartialActionItem)
     status ?: ActionItemStatus
+    goalId?: string
 }
 
 async function ensureStandaloneGoalAndSubgoal(supabase: any, userId: string) {
@@ -157,10 +159,10 @@ async function getOrCreateStandaloneTaskForDay(supabase: any, userId: string, da
         throw new Error(`Failed to create standalone task: ${taskError.message}`);
     }
 
-    return standaloneTask.id;
+    return {taskId: standaloneTask.id, goalId: goalId};
 }
 
-export const createActionItem = async({taskId, date, taskActionPlanId, actionItem, status}:CreateActionItemProps):Promise<ActionItem> => {
+export const createActionItem = async({taskId, date, taskActionPlanId, actionItem, status, goalId}:CreateActionItemProps):Promise<ActionItem> => {
     const cookieStore = await cookies();
 
     const supabase = createServerClient(
@@ -174,7 +176,6 @@ export const createActionItem = async({taskId, date, taskActionPlanId, actionIte
             },
         }
     );
-
     try{
         const {userId} = await auth();
         const userData: User | null = await getUser(userId!);
@@ -238,11 +239,23 @@ export const createActionItem = async({taskId, date, taskActionPlanId, actionIte
             dayId = newDay.id;
         }
         let finalTaskId = taskId;
-        
+        let finalGoalId = goalId;
         if (taskId === "") {
             console.log("Getting or creating standalone task for the day");
-            finalTaskId = await getOrCreateStandaloneTaskForDay(supabase, userData.id, date);
+            const {taskId:recievedTaskId, goalId:receivedGoalId} = await getOrCreateStandaloneTaskForDay(supabase, userData.id, date);
+            finalTaskId = recievedTaskId;
+            if (!finalGoalId) {  // Only use standalone goal if no goalId was provided
+                finalGoalId = receivedGoalId;
+            }
             console.log("Using standalone task with ID:", finalTaskId);
+        } else if (!finalGoalId) {  // Only fetch goal ID from task if no goalId was provided
+            const goalIdExtractedFromtask = await getGoalIdFromTaskId({taskId: taskId!});
+
+            if (goalIdExtractedFromtask === "") {
+                console.log("Goal ID not found for task ID:", taskId);
+                throw new Error("Goal ID not found for task ID");
+            }
+            finalGoalId = goalIdExtractedFromtask;
         }
 
         const actionItemId = uid(32);
@@ -271,6 +284,7 @@ export const createActionItem = async({taskId, date, taskActionPlanId, actionIte
                     user_id: userData.id,
                     status: status ?? ActionItemStatus.PENDING,
                     task_id: finalTaskId,
+                    goal_id: finalGoalId,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
                 },

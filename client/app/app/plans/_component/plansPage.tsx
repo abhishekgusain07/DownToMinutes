@@ -320,7 +320,7 @@ const PlansForm = ({
                     description: values.description,
                     duration: values.duration,
                 },
-                status: values.status
+                status: values.status,
             });
             console.log("Action item created successfully");
             form.reset();

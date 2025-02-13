@@ -214,6 +214,8 @@ model goal {
   user          user         @relation(fields: [user_id], references: [id], onDelete: Cascade)
   subgoals      subgoal[]
   tasks         task[]
+
+  ActionItem ActionItem[]
   notifications Notification[] // Relation to notifications
   @@index([user_id])
 }
@@ -242,7 +244,6 @@ model subgoal {
   user        user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
   tasks       task[]     // New relation to tasks
   notifications Notification[] // Relation to notifications
-
   @@index([goal_id])
   @@index([user_id])
 }
@@ -389,7 +390,9 @@ model ActionItem {
   description String           // "Learn Next.js Routing"
   status      ActionItemStatus @default(PENDING)
   task        task             @relation(fields: [task_id], references: [id])
-  task_id     String           // Direct link to task for quick queries
+  task_id     String  
+  goal_id     String
+  goal         goal              @relation(fields: [goal_id], references: [id])
   day         day              @relation(fields: [day_id], references: [id])
   day_id      String
   user        user             @relation(fields: [user_id], references: [id], onDelete: Cascade)
