@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { SignOutButton } from "@clerk/nextjs";
+import ModeToggle from "@/components/mode-toggle";
 
 export function AppSidebar({
   children,
@@ -54,7 +55,7 @@ export function AppSidebar({
               ))}
             </nav>
           </div>
-          
+          <div className="flex flex-col gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <SidebarLink
@@ -74,9 +75,13 @@ export function AppSidebar({
                 className="cursor-pointer"
               >
                 <SignOutButton />
+                
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <ModeToggle />
+          </div>
+        
         </SidebarBody>
       </Sidebar>
       {children}

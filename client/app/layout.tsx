@@ -34,7 +34,7 @@ export default function RootLayout({
             href="https://utfs.io/f/69a12ab1-4d57-4913-90f9-38c6aca6c373-1txg2.png"
             as="image"
           />
-          <Script src="https://unpkg.com/react-scan/dist/auto.global.js" />
+          {/* <Script src="https://unpkg.com/react-scan/dist/auto.global.js" /> */}
         </head>
         <body className={GeistSans.className} >
           <Provider>

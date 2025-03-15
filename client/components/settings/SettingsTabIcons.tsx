@@ -7,9 +7,10 @@ import FaqIcon from "@/app/icons/faq.svg";
 import SecurityIcon from "@/app/icons/security.svg";
 import ChatInterfaceIcon from "@/app/icons/chat-interface.svg";
 import AgentIcon from "@/app/icons/agent.svg";
+import { Settings } from 'lucide-react';
 
 export const SettingsTabIcons: Record<string, React.ReactNode> = {
-  "General": <SettingsIcon />,
+  "General": <Settings />,
   "Notifications": <NotificationsIcon />,
 //   "Members": <AgentIcon />,
 //   "Chat Interface": <ChatInterfaceIcon />,
